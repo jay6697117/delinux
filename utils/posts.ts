@@ -256,8 +256,8 @@ export async function getUserFavorites(
     postIds.map((id) => kv.get<Post>(["posts", id])),
   );
   const posts = postEntries
-    .filter((e) => e.value !== null)
-    .map((e) => e.value as Post);
+    .filter((e): e is { key: unknown[]; value: Post; versionstamp: string } => e.value !== null)
+    .map((e) => e.value);
 
   return {
     items: posts,
@@ -349,8 +349,8 @@ export async function searchPosts(
     sortedIds.map((id) => kv.get<Post>(["posts", id])),
   );
   const posts = postEntries
-    .filter((e) => e.value !== null)
-    .map((e) => e.value as Post);
+    .filter((e): e is { key: unknown[]; value: Post; versionstamp: string } => e.value !== null)
+    .map((e) => e.value);
 
   return posts;
 }
