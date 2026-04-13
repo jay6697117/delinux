@@ -1,7 +1,9 @@
 // 用于清空 Deno KV 中所有数据的一次性脚本
 // 使用方式：deno run -A --unstable-kv scripts/clear-kv.ts
 
-const kv = await Deno.openKv();
+import { getKv } from "../utils/db.ts";
+
+const kv = await getKv();
 const entries = kv.list({ prefix: [] });
 let count = 0;
 

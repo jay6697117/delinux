@@ -5,7 +5,9 @@ let _kv: Deno.Kv | null = null;
 // 获取 KV 实例（单例）
 export async function getKv(): Promise<Deno.Kv> {
   if (!_kv) {
-    _kv = await Deno.openKv();
+    // 如果没有部署 ID 说明在本地，指定固定本地文件以防多脚本数据库隔离
+    const isDeploy = Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined;
+    _kv = await Deno.openKv(isDeploy ? undefined : "./local.sqlite");
   }
   return _kv;
 }

@@ -1,7 +1,9 @@
 // 用于单独清空所有用户数据的一次性脚本
 // 使用方式：deno run -A --unstable-kv scripts/clear-users.ts
 
-const kv = await Deno.openKv();
+import { getKv } from "../utils/db.ts";
+
+const kv = await getKv();
 let count = 0;
 
 console.log("正在清空数据库里的用户数据...");
