@@ -9,9 +9,7 @@ import { initBoards } from "./utils/boards.ts";
 
 export const app = new App<State>();
 
-app.use(staticFiles());
-
-// P0: 为 styles.css 添加缓存头（1 小时强缓存 + 1 天 stale-while-revalidate）
+// P0: 为 styles.css 添加缓存头（必须在 staticFiles 之前注册）
 app.use(async (ctx) => {
   const { pathname } = new URL(ctx.req.url);
   if (pathname === "/styles.css") {
@@ -25,6 +23,8 @@ app.use(async (ctx) => {
   }
   return ctx.next();
 });
+
+app.use(staticFiles());
 
 // 版块初始化标记
 let boardsInitialized = false;
