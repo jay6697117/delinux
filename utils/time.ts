@@ -18,11 +18,17 @@ export function timeAgo(timestamp: number): string {
 
   // 超过 12 个月显示具体日期
   const date = new Date(timestamp);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  return `${date.getFullYear()}-${
+    String(date.getMonth() + 1).padStart(2, "0")
+  }-${String(date.getDate()).padStart(2, "0")}`;
 }
 
 // 完整日期时间
 export function formatDate(timestamp: number): string {
   const date = new Date(timestamp);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+  return `${date.getFullYear()}-${
+    String(date.getMonth() + 1).padStart(2, "0")
+  }-${String(date.getDate()).padStart(2, "0")} ${
+    String(date.getHours()).padStart(2, "0")
+  }:${String(date.getMinutes()).padStart(2, "0")}`;
 }

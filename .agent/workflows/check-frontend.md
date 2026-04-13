@@ -6,6 +6,7 @@ description: "Check if the code you just wrote follows the frontend development 
 Check if the code you just wrote follows the frontend development guidelines.
 
 Execute these steps:
+
 1. Run `git status` to see modified files
 2. Read `.trellis/spec/frontend/index.md` to understand which guidelines apply
 3. Based on what you changed, read the relevant guideline files:

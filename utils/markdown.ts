@@ -11,7 +11,10 @@ marked.setOptions({
 // 简单的 XSS 防护：转义危险的 HTML 标签
 function sanitizeHtml(html: string): string {
   // 移除 script 标签及内容
-  html = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
+  html = html.replace(
+    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+    "",
+  );
   // 移除 on* 事件属性
   html = html.replace(/\s+on\w+\s*=\s*['"][^'"]*['"]/gi, "");
   html = html.replace(/\s+on\w+\s*=\s*\S+/gi, "");

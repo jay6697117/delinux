@@ -5,7 +5,8 @@ description: "Update Code-Spec - Capture Executable Contracts"
 
 # Update Code-Spec - Capture Executable Contracts
 
-When you learn something valuable (from debugging, implementing, or discussion), use this skill to update the relevant code-spec documents.
+When you learn something valuable (from debugging, implementing, or discussion),
+use this skill to update the relevant code-spec documents.
 
 **Timing**: After completing a task, fixing a bug, or discovering a new pattern
 
@@ -14,13 +15,16 @@ When you learn something valuable (from debugging, implementing, or discussion),
 ## Code-Spec First Rule (CRITICAL)
 
 In this project, "spec" for implementation work means **code-spec**:
+
 - Executable contracts (not principle-only text)
 - Concrete signatures, payload fields, env keys, and boundary behavior
 - Testable validation/error behavior
 
-If the change touches infra or cross-layer contracts, code-spec depth is mandatory.
+If the change touches infra or cross-layer contracts, code-spec depth is
+mandatory.
 
 Required sections for infra/cross-layer specs:
+
 1. Scope / Trigger
 2. Signatures (command/API/DB)
 3. Contracts (request/response/env)
@@ -33,17 +37,19 @@ Required sections for infra/cross-layer specs:
 
 ## When to Update Code-Specs
 
-| Trigger | Example | Target Spec |
-|---------|---------|-------------|
-| **Implemented a feature** | Added template download with giget | Relevant `backend/` or `frontend/` file |
-| **Made a design decision** | Used type field + mapping table for extensibility | Relevant code-spec + "Design Decisions" section |
-| **Fixed a bug** | Found a subtle issue with error handling | `backend/error-handling.md` |
-| **Discovered a pattern** | Found a better way to structure code | Relevant `backend/` or `frontend/` file |
-| **Hit a gotcha** | Learned that X must be done before Y | Relevant code-spec + "Common Mistakes" section |
-| **Established a convention** | Team agreed on naming pattern | `quality-guidelines.md` |
-| **New thinking trigger** | "Don't forget to check X before doing Y" | `guides/*.md` (as a checklist item, not detailed rules) |
+| Trigger                      | Example                                           | Target Spec                                             |
+| ---------------------------- | ------------------------------------------------- | ------------------------------------------------------- |
+| **Implemented a feature**    | Added template download with giget                | Relevant `backend/` or `frontend/` file                 |
+| **Made a design decision**   | Used type field + mapping table for extensibility | Relevant code-spec + "Design Decisions" section         |
+| **Fixed a bug**              | Found a subtle issue with error handling          | `backend/error-handling.md`                             |
+| **Discovered a pattern**     | Found a better way to structure code              | Relevant `backend/` or `frontend/` file                 |
+| **Hit a gotcha**             | Learned that X must be done before Y              | Relevant code-spec + "Common Mistakes" section          |
+| **Established a convention** | Team agreed on naming pattern                     | `quality-guidelines.md`                                 |
+| **New thinking trigger**     | "Don't forget to check X before doing Y"          | `guides/*.md` (as a checklist item, not detailed rules) |
 
-**Key Insight**: Code-spec updates are NOT just for problems. Every feature implementation contains design decisions and contracts that future AI/developers need to execute safely.
+**Key Insight**: Code-spec updates are NOT just for problems. Every feature
+implementation contains design decisions and contracts that future AI/developers
+need to execute safely.
 
 ---
 
@@ -64,10 +70,10 @@ Required sections for infra/cross-layer specs:
 
 ### CRITICAL: Code-Spec vs Guide - Know the Difference
 
-| Type | Location | Purpose | Content Style |
-|------|----------|---------|---------------|
+| Type          | Location                        | Purpose                           | Content Style                                       |
+| ------------- | ------------------------------- | --------------------------------- | --------------------------------------------------- |
 | **Code-Spec** | `backend/*.md`, `frontend/*.md` | Tell AI "how to implement safely" | Signatures, contracts, matrices, cases, test points |
-| **Guide** | `guides/*.md` | Help AI "what to think about" | Checklists, questions, pointers to specs |
+| **Guide**     | `guides/*.md`                   | Help AI "what to think about"     | Checklists, questions, pointers to specs            |
 
 **Decision Rule**: Ask yourself:
 
@@ -76,12 +82,13 @@ Required sections for infra/cross-layer specs:
 
 **Example**:
 
-| Learning | Wrong Location | Correct Location |
-|----------|----------------|------------------|
-| "Use `reconfigure()` not `TextIOWrapper` for Windows stdout" | ❌ `guides/cross-platform-thinking-guide.md` | ✅ `backend/script-conventions.md` |
-| "Remember to check encoding when writing cross-platform code" | ❌ `backend/script-conventions.md` | ✅ `guides/cross-platform-thinking-guide.md` |
+| Learning                                                      | Wrong Location                               | Correct Location                             |
+| ------------------------------------------------------------- | -------------------------------------------- | -------------------------------------------- |
+| "Use `reconfigure()` not `TextIOWrapper` for Windows stdout"  | ❌ `guides/cross-platform-thinking-guide.md` | ✅ `backend/script-conventions.md`           |
+| "Remember to check encoding when writing cross-platform code" | ❌ `backend/script-conventions.md`           | ✅ `guides/cross-platform-thinking-guide.md` |
 
-**Guides should be short checklists that point to specs**, not duplicate the detailed rules.
+**Guides should be short checklists that point to specs**, not duplicate the
+detailed rules.
 
 ---
 
@@ -97,19 +104,20 @@ Answer these questions:
 
 ### Step 2: Classify the Update Type
 
-| Type | Description | Action |
-|------|-------------|--------|
-| **Design Decision** | Why we chose approach X over Y | Add to "Design Decisions" section |
-| **Project Convention** | How we do X in this project | Add to relevant section with examples |
-| **New Pattern** | A reusable approach discovered | Add to "Patterns" section |
-| **Forbidden Pattern** | Something that causes problems | Add to "Anti-patterns" or "Don't" section |
-| **Common Mistake** | Easy-to-make error | Add to "Common Mistakes" section |
-| **Convention** | Agreed-upon standard | Add to relevant section |
-| **Gotcha** | Non-obvious behavior | Add warning callout |
+| Type                   | Description                    | Action                                    |
+| ---------------------- | ------------------------------ | ----------------------------------------- |
+| **Design Decision**    | Why we chose approach X over Y | Add to "Design Decisions" section         |
+| **Project Convention** | How we do X in this project    | Add to relevant section with examples     |
+| **New Pattern**        | A reusable approach discovered | Add to "Patterns" section                 |
+| **Forbidden Pattern**  | Something that causes problems | Add to "Anti-patterns" or "Don't" section |
+| **Common Mistake**     | Easy-to-make error             | Add to "Common Mistakes" section          |
+| **Convention**         | Agreed-upon standard           | Add to relevant section                   |
+| **Gotcha**             | Non-obvious behavior           | Add warning callout                       |
 
 ### Step 3: Read the Target Code-Spec
 
 Before editing, read the current code-spec to:
+
 - Understand existing structure
 - Avoid duplicating content
 - Find the right section for your update
@@ -130,7 +138,8 @@ Follow these principles:
 
 ### Step 5: Update the Index (if needed)
 
-If you added a new section or the code-spec status changed, update the category's `index.md`.
+If you added a new section or the code-spec status changed, update the
+category's `index.md`.
 
 ---
 
@@ -142,17 +151,27 @@ If you added a new section or the code-spec status changed, update the category'
 ## Scenario: <name>
 
 ### 1. Scope / Trigger
+
 - Trigger: <why this requires code-spec depth>
 
 ### 2. Signatures
+
 ### 3. Contracts
+
 ### 4. Validation & Error Matrix
+
 ### 5. Good/Base/Bad Cases
+
 ### 6. Tests Required
+
 ### 7. Wrong vs Correct
+
 #### Wrong
+
 ...
+
 #### Correct
+
 ...
 ```
 
@@ -164,16 +183,13 @@ If you added a new section or the code-spec status changed, update the category'
 **Context**: What problem were we solving?
 
 **Options Considered**:
+
 1. Option A - brief description
 2. Option B - brief description
 
 **Decision**: We chose Option X because...
 
-**Example**:
-\`\`\`typescript
-// How it's implemented
-code example
-\`\`\`
+**Example**: \`\`\`typescript // How it's implemented code example \`\`\`
 
 **Extensibility**: How to extend this in the future...
 ```
@@ -187,10 +203,7 @@ code example
 
 **Why**: Why we do it this way in this project.
 
-**Example**:
-\`\`\`typescript
-// How to follow this convention
-code example
+**Example**: \`\`\`typescript // How to follow this convention code example
 \`\`\`
 
 **Related**: Links to related conventions or specs.
@@ -205,14 +218,9 @@ code example
 
 **Solution**: Brief description of the approach.
 
-**Example**:
-\`\`\`
-// Good
-code example
+**Example**: \`\`\` // Good code example
 
-// Bad
-code example
-\`\`\`
+// Bad code example \`\`\`
 
 **Why**: Explanation of why this works better.
 ```
@@ -222,19 +230,11 @@ code example
 ```markdown
 ### Don't: Pattern Name
 
-**Problem**:
-\`\`\`
-// Don't do this
-bad code example
-\`\`\`
+**Problem**: \`\`\` // Don't do this bad code example \`\`\`
 
 **Why it's bad**: Explanation of the issue.
 
-**Instead**:
-\`\`\`
-// Do this instead
-good code example
-\`\`\`
+**Instead**: \`\`\` // Do this instead good code example \`\`\`
 ```
 
 ### Adding a Common Mistake
@@ -327,9 +327,11 @@ Development Flow:
 
 ## Core Philosophy
 
-> **Code-specs are living documents. Every debugging session, every "aha moment" is an opportunity to make the implementation contract clearer.**
+> **Code-specs are living documents. Every debugging session, every "aha moment"
+> is an opportunity to make the implementation contract clearer.**
 
 The goal is **institutional memory**:
+
 - What one person learns, everyone benefits from
 - What AI learns in one session, persists to future sessions
 - Mistakes become documented guardrails

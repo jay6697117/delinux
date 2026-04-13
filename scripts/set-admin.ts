@@ -1,30 +1,30 @@
-// 一次性脚本：将第一个注册用户设为管理员
-// 使用方式：deno run -A --unstable-kv scripts/set-admin.ts <邮箱>
+// 一次性脚本：将指定邮箱的用户设为管理员
+// 使用方式：deno run -A scripts/set-admin.ts <邮箱>
+
+import { getDb, initDb } from "../utils/db.ts";
 
 const email = Deno.args[0];
 if (!email) {
-  console.log("用法: deno run -A --unstable-kv scripts/set-admin.ts <邮箱>");
-  console.log("示例: deno run -A --unstable-kv scripts/set-admin.ts admin@delinux.dev");
+  console.log("用法: deno run -A scripts/set-admin.ts <邮箱>");
+  console.log("示例: deno run -A scripts/set-admin.ts admin@delinux.dev");
   Deno.exit(1);
 }
 
-const kv = await Deno.openKv();
+await initDb();
+const db = getDb();
 
 // 通过邮箱找用户
-const userIdEntry = await kv.get<string>(["users_by_email", email.toLowerCase()]);
-if (!userIdEntry.value) {
+const result = await db.execute({
+  sql: "SELECT id, username, email, role FROM users WHERE LOWER(email) = ?",
+  args: [email.toLowerCase()],
+});
+
+if (result.rows.length === 0) {
   console.error(`❌ 未找到邮箱为 ${email} 的用户`);
   Deno.exit(1);
 }
 
-const userId = userIdEntry.value;
-const userEntry = await kv.get<Record<string, unknown>>(["users", userId]);
-if (!userEntry.value) {
-  console.error(`❌ 用户数据不存在: ${userId}`);
-  Deno.exit(1);
-}
-
-const user = userEntry.value;
+const user = result.rows[0];
 console.log(`📋 找到用户: ${user.username} (${user.email})`);
 console.log(`   当前角色: ${user.role}`);
 
@@ -34,8 +34,8 @@ if (user.role === "admin") {
 }
 
 // 设为管理员
-const updated = { ...user, role: "admin" };
-await kv.set(["users", userId], updated);
+await db.execute({
+  sql: "UPDATE users SET role = 'admin' WHERE id = ?",
+  args: [user.id as string],
+});
 console.log("✅ 已成功设为管理员！");
-
-kv.close();

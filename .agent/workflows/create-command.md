@@ -5,7 +5,8 @@ description: "Create New Workflow"
 
 # Create New Workflow
 
-Create a new Antigravity workflow in `.agent/workflows/<workflow-name>.md` based on user requirements.
+Create a new Antigravity workflow in `.agent/workflows/<workflow-name>.md` based
+on user requirements.
 
 ## Usage
 
@@ -14,6 +15,7 @@ Create a new Antigravity workflow in `.agent/workflows/<workflow-name>.md` based
 ```
 
 **Example**:
+
 ```bash
 /create-command review-pr Check PR code changes against project guidelines
 ```
@@ -23,12 +25,14 @@ Create a new Antigravity workflow in `.agent/workflows/<workflow-name>.md` based
 ### 1. Parse Input
 
 Extract from user input:
+
 - **Skill name**: Use kebab-case (e.g., `review-pr`)
 - **Description**: What the skill should accomplish
 
 ### 2. Analyze Requirements
 
 Determine skill type based on description:
+
 - **Initialization**: Read docs, establish context
 - **Pre-development**: Read guidelines, check dependencies
 - **Code check**: Validate code quality and guideline compliance
@@ -53,6 +57,7 @@ description: "<description>"
 ### 4. Create Files
 
 Create:
+
 - `.agent/workflows/<workflow-name>.md`
 
 ### 5. Confirm Creation
@@ -90,12 +95,12 @@ Description:
 
 ## Naming Conventions
 
-| Skill Type | Prefix | Example |
-|------------|--------|---------|
-| Session Start | `start` | `start` |
-| Pre-development | `before-` | `before-frontend-dev` |
-| Check | `check-` | `check-frontend` |
-| Record | `record-` | `record-session` |
-| Generate | `generate-` | `generate-api-doc` |
-| Update | `update-` | `update-changelog` |
-| Other | Verb-first | `review-code`, `sync-data` |
+| Skill Type      | Prefix      | Example                    |
+| --------------- | ----------- | -------------------------- |
+| Session Start   | `start`     | `start`                    |
+| Pre-development | `before-`   | `before-frontend-dev`      |
+| Check           | `check-`    | `check-frontend`           |
+| Record          | `record-`   | `record-session`           |
+| Generate        | `generate-` | `generate-api-doc`         |
+| Update          | `update-`   | `update-changelog`         |
+| Other           | Verb-first  | `review-code`, `sync-data` |

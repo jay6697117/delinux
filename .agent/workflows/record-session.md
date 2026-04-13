@@ -3,9 +3,12 @@ name: record-session
 description: "Record work progress after human has tested and committed code"
 ---
 
-[!] **Prerequisite**: This skill should only be used AFTER the human has tested and committed the code.
+[!] **Prerequisite**: This skill should only be used AFTER the human has tested
+and committed the code.
 
-**Do NOT run `git commit` directly** — the scripts below handle their own commits for `.trellis/` metadata. You only need to read git history (`git log`, `git status`, `git diff`) and run the Python scripts.
+**Do NOT run `git commit` directly** — the scripts below handle their own
+commits for `.trellis/` metadata. You only need to read git history (`git log`,
+`git status`, `git diff`) and run the Python scripts.
 
 ---
 
@@ -17,10 +20,13 @@ description: "Record work progress after human has tested and committed code"
 python3 ./.trellis/scripts/get_context.py --mode record
 ```
 
-[!] Archive tasks whose work is **actually done** — judge by work status, not the `status` field in task.json:
+[!] Archive tasks whose work is **actually done** — judge by work status, not
+the `status` field in task.json:
+
 - Code committed? → Archive it (don't wait for PR)
 - All acceptance criteria met? → Archive it
-- Don't skip archiving just because `status` still says `planning` or `in_progress`
+- Don't skip archiving just because `status` still says `planning` or
+  `in_progress`
 
 ```bash
 python3 ./.trellis/scripts/task.py archive <task-name>
@@ -49,6 +55,7 @@ EOF
 ```
 
 **Auto-completes**:
+
 - [OK] Appends session to journal-N.md
 - [OK] Auto-detects line count, creates new file if >2000 lines
 - [OK] Updates index.md (Total Sessions +1, Last Active, line stats, history)
@@ -58,9 +65,9 @@ EOF
 
 ## Script Command Reference
 
-| Command | Purpose |
-|---------|---------|
-| `python3 ./.trellis/scripts/get_context.py --mode record` | Get context for record-session |
+| Command                                                                  | Purpose                                 |
+| ------------------------------------------------------------------------ | --------------------------------------- |
+| `python3 ./.trellis/scripts/get_context.py --mode record`                | Get context for record-session          |
 | `python3 ./.trellis/scripts/add_session.py --title "..." --commit "..."` | **One-click add session (recommended)** |
-| `python3 ./.trellis/scripts/task.py archive <name>` | Archive completed task (auto-commits) |
-| `python3 ./.trellis/scripts/task.py list` | List active tasks |
+| `python3 ./.trellis/scripts/task.py archive <name>`                      | Archive completed task (auto-commits)   |
+| `python3 ./.trellis/scripts/task.py list`                                | List active tasks                       |

@@ -1,24 +1,26 @@
+// 管理员清空所有数据 API
+
 import { define } from "../../../utils.ts";
-import { getKv } from "../../../utils/db.ts";
+import { getDb } from "../../../utils/db.ts";
 
 export const handler = define.handlers({
   async POST(ctx) {
-    // 权限校验：必须是最顶级的 admin
     if (!ctx.state.user || ctx.state.user.role !== "admin") {
       return new Response("Forbidden", { status: 403 });
     }
 
-    const kv = await getKv();
-    
-    // 获取根前缀下所有数据
-    const entries = kv.list({ prefix: [] });
-    
-    // 遍历强行删除所有 KV 条目（极度危险的操作，会清空一切，包括当前管理员的账号）
-    for await (const entry of entries) {
-      await kv.delete(entry.key);
-    }
+    const db = getDb();
 
-    // 清空完成后，由于当前管理员自身数据也已被核弹级清除，强行跳回首页重新开始。
+    // 批量清空所有表（替代 KV 逐条遍历删除）
+    await db.batch([
+      "DELETE FROM replies",
+      "DELETE FROM likes",
+      "DELETE FROM favorites",
+      "DELETE FROM sessions",
+      "DELETE FROM posts",
+      "DELETE FROM users",
+    ]);
+
     return new Response(null, { status: 302, headers: { location: "/" } });
   },
 });

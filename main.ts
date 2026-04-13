@@ -1,17 +1,17 @@
 import { App, staticFiles } from "fresh";
 import { type State } from "./utils.ts";
 import { getSessionIdFromCookie, getUserBySession } from "./utils/auth.ts";
-import { initBoards } from "./utils/boards.ts";
+import { initDb } from "./utils/db.ts";
 import { getCacheControl } from "./utils/cache.ts";
 
 export const app = new App<State>();
-let boardsInitialized = false;
+let dbInitialized = false;
 
-function ensureBoardsInitialized(): void {
-  if (boardsInitialized) return;
+function ensureDbInitialized(): void {
+  if (dbInitialized) return;
 
-  boardsInitialized = true;
-  void initBoards().catch((err) => console.error("版块初始化失败:", err));
+  dbInitialized = true;
+  void initDb().catch((err) => console.error("数据库初始化失败:", err));
 }
 
 // P2: 静态资源缓存（必须在 staticFiles 之前注册）
@@ -52,9 +52,9 @@ app.use(async (ctx) => {
     return ctx.next();
   }
 
-  ensureBoardsInitialized();
+  ensureDbInitialized();
 
-  // P3: 使用带内存缓存的 getUserBySession，减少重复 KV 查询
+  // 使用带内存缓存的 getUserBySession，减少重复数据库查询
   try {
     const cookieHeader = ctx.req.headers.get("cookie");
     const sessionId = getSessionIdFromCookie(cookieHeader);

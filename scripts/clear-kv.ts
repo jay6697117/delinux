@@ -1,19 +1,20 @@
-// 用于清空 Deno KV 中所有数据的一次性脚本
-// 使用方式：deno run -A --unstable-kv scripts/clear-kv.ts
+// 用于清空 Turso 数据库中所有数据的一次性脚本
+// 使用方式：deno run -A scripts/clear-kv.ts
 
-import { getKv } from "../utils/db.ts";
+import { getDb, initDb } from "../utils/db.ts";
 
-const kv = await getKv();
-const entries = kv.list({ prefix: [] });
-let count = 0;
+await initDb();
+const db = getDb();
 
-console.log("正在清空 Deno KV 数据...");
+console.log("正在清空 Turso 数据库数据...");
 
-for await (const entry of entries) {
-  await kv.delete(entry.key);
-  count++;
-}
+await db.batch([
+  "DELETE FROM replies",
+  "DELETE FROM likes",
+  "DELETE FROM favorites",
+  "DELETE FROM sessions",
+  "DELETE FROM posts",
+  "DELETE FROM users",
+]);
 
-console.log(`✅ 成功！已清空 ${count} 条 KV 数据。`);
-
-kv.close();
+console.log("✅ 成功！已清空所有表数据。");

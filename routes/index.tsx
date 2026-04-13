@@ -1,109 +1,79 @@
 import { define } from "../utils.ts";
 import { BOARDS, getBoardBySlug } from "../utils/boards.ts";
-import { getKv } from "../utils/db.ts";
-import { getPostsByIds } from "../utils/posts.ts";
+import { getLatestPosts } from "../utils/posts.ts";
 import { timeAgo } from "../utils/time.ts";
 import { getCachedData, setCachedData } from "../utils/cache.ts";
-import type { Post } from "../utils/state.ts";
 
 export const handler = define.handlers({
   async GET(ctx) {
     try {
       const url = new URL(ctx.req.url);
-      const cursor = url.searchParams.get("cursor") || undefined;
+      const page = parseInt(url.searchParams.get("page") || "0");
       const limit = 20;
 
-      // P1a: 直接用静态常量，省掉 5 次 KV get
       const boards = BOARDS;
 
       // 首页无分页时使用内存缓存（30 秒 TTL）
-      const cacheKey = cursor ? "" : "home:latest";
+      const cacheKey = page === 0 ? "home:latest" : "";
       if (cacheKey) {
         const cached = getCachedData<{
           boards: typeof BOARDS;
-          posts: Awaited<ReturnType<typeof getPostsByIds>>;
+          posts: Awaited<ReturnType<typeof getLatestPosts>>["posts"];
           hasMore: boolean;
-          nextCursor: string | undefined;
+          page: number;
         }>(cacheKey);
         if (cached) return { data: cached };
       }
 
-      const kv = await getKv();
-      const entries = kv.list<string>({ prefix: ["posts_latest"] }, {
-        limit: limit + 1,
-        cursor,
-        consistency: "eventual",
-      });
+      // 一条 SQL 获取最新帖子（替代 kv.list + getMany 两步走）
+      const { posts, hasMore } = await getLatestPosts(limit, page * limit);
 
-      const postIds: string[] = [];
-      let nextCursor: string | undefined;
-      let count = 0;
+      const data = { boards, posts, hasMore, page };
 
-      for await (const entry of entries) {
-        count++;
-        if (count > limit) break;
-        postIds.push(entry.value as string);
-        nextCursor = entries.cursor;
-      }
-
-      const hasMore = count > limit;
-
-      // P1b: 批量并行获取帖子详情
-      const posts = await getPostsByIds(postIds);
-
-      const data = { boards, posts, hasMore, nextCursor };
-
-      // 缓存首页数据（无分页时）
       if (cacheKey) setCachedData(cacheKey, data);
 
       return { data };
     } catch (err) {
       console.error("首页数据加载失败:", err);
-      // 降级：返回空数据 + 静态版块列表
       return {
         data: {
           boards: BOARDS,
-          posts: [] as Post[],
+          posts: [] as Awaited<ReturnType<typeof getLatestPosts>>["posts"],
           hasMore: false,
-          nextCursor: undefined,
+          page: 0,
         },
       };
     }
   },
 });
 
-export default define.page<typeof handler>(function Home({ data }) {
-  const { boards, posts, hasMore, nextCursor } = data;
-
+export default define.page<typeof handler>(function HomePage({ data, state }) {
+  const { boards, posts, hasMore, page } = data;
   return (
     <div>
+      {/* 版块导航 */}
       <div class="board-grid">
         {boards.map((board) => (
           <a href={`/board/${board.slug}`} class="board-card" key={board.slug}>
-            <span class="board-icon">{board.icon}</span>
+            <div class="board-icon">{board.icon}</div>
             <div class="board-info">
-              <h3>{board.name}</h3>
-              <p>{board.description}</p>
+              <div class="board-name">{board.name}</div>
+              <div class="board-desc">{board.description}</div>
             </div>
           </a>
         ))}
       </div>
 
-      <div class="card" style={{ marginTop: "var(--space-md)" }}>
-        <div
-          class="card-header"
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <span>📋 最新动态</span>
+      {/* 最新帖子 */}
+      <div class="card" style={{ marginTop: "var(--space-lg)" }}>
+        <div class="page-header">
+          <h2 class="page-title">🔥 最新动态</h2>
+          {state.user && <a href="/post/new" class="btn btn-primary">发帖</a>}
         </div>
         {posts.length === 0
           ? (
             <div class="empty-state">
-              <div class="empty-state-icon">✨</div>
+              <div class="empty-state-icon">📭</div>
               <p class="empty-state-text">还没有帖子，来发第一篇吧！</p>
             </div>
           )
@@ -135,9 +105,9 @@ export default define.page<typeof handler>(function Home({ data }) {
               ))}
             </ul>
           )}
-        {hasMore && nextCursor && (
+        {hasMore && (
           <div class="pagination">
-            <a href={`/?cursor=${nextCursor}`} class="btn btn-secondary">
+            <a href={`/?page=${page + 1}`} class="btn btn-secondary">
               加载更多
             </a>
           </div>

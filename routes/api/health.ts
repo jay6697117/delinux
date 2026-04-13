@@ -2,6 +2,7 @@
 // 部署后访问 /api/health 查看诊断信息
 
 import { define } from "../../utils.ts";
+import { getDb } from "../../utils/db.ts";
 
 export const handler = define.handlers({
   async GET(_ctx) {
@@ -11,33 +12,33 @@ export const handler = define.handlers({
       timestamp: new Date().toISOString(),
     };
 
-    // 测试 KV 连接
+    // 测试 Turso 数据库连接
     try {
-      const kv = await Deno.openKv();
-      const testKey = ["_health_check"];
-      await kv.set(testKey, { ts: Date.now() });
-      const result = await kv.get(testKey);
-      diagnostics.kv = {
+      const db = getDb();
+      const result = await db.execute(
+        "SELECT COUNT(*) as cnt FROM users",
+      );
+      diagnostics.database = {
         status: "ok",
-        testValue: result.value,
+        type: "turso",
+        userCount: result.rows[0].cnt,
       };
-      await kv.delete(testKey);
     } catch (err) {
-      diagnostics.kv = {
+      diagnostics.database = {
         status: "error",
         message: String(err),
         stack: (err as Error).stack,
       };
     }
 
-    // 测试版块初始化
+    // 测试版块配置
     try {
       const { getAllBoards, BOARDS } = await import("../../utils/boards.ts");
-      const boards = await getAllBoards();
+      const boards = getAllBoards();
       diagnostics.boards = {
         status: "ok",
-        staticCount: BOARDS.length,
-        kvCount: boards.length,
+        count: BOARDS.length,
+        loaded: boards.length,
       };
     } catch (err) {
       diagnostics.boards = {

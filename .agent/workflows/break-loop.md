@@ -5,7 +5,8 @@ description: "Break the Loop - Deep Bug Analysis"
 
 # Break the Loop - Deep Bug Analysis
 
-When debug is complete, use this skill for deep analysis to break the "fix bug -> forget -> repeat" cycle.
+When debug is complete, use this skill for deep analysis to break the "fix bug
+-> forget -> repeat" cycle.
 
 ---
 
@@ -17,13 +18,13 @@ Analyze the bug you just fixed from these 5 dimensions:
 
 Which category does this bug belong to?
 
-| Category | Characteristics | Example |
-|----------|-----------------|---------|
-| **A. Missing Spec** | No documentation on how to do it | New feature without checklist |
-| **B. Cross-Layer Contract** | Interface between layers unclear | API returns different format than expected |
-| **C. Change Propagation Failure** | Changed one place, missed others | Changed function signature, missed call sites |
-| **D. Test Coverage Gap** | Unit test passes, integration fails | Works alone, breaks when combined |
-| **E. Implicit Assumption** | Code relies on undocumented assumption | Timestamp seconds vs milliseconds |
+| Category                          | Characteristics                        | Example                                       |
+| --------------------------------- | -------------------------------------- | --------------------------------------------- |
+| **A. Missing Spec**               | No documentation on how to do it       | New feature without checklist                 |
+| **B. Cross-Layer Contract**       | Interface between layers unclear       | API returns different format than expected    |
+| **C. Change Propagation Failure** | Changed one place, missed others       | Changed function signature, missed call sites |
+| **D. Test Coverage Gap**          | Unit test passes, integration fails    | Works alone, breaks when combined             |
+| **E. Implicit Assumption**        | Code relies on undocumented assumption | Timestamp seconds vs milliseconds             |
 
 ### 2. Why Fixes Failed (if applicable)
 
@@ -38,14 +39,14 @@ If you tried multiple fixes before succeeding, analyze each failure:
 
 What mechanisms would prevent this from happening again?
 
-| Type | Description | Example |
-|------|-------------|---------|
-| **Documentation** | Write it down so people know | Update thinking guide |
-| **Architecture** | Make the error impossible structurally | Type-safe wrappers |
-| **Compile-time** | TypeScript strict, no any | Signature change causes compile error |
-| **Runtime** | Monitoring, alerts, scans | Detect orphan entities |
-| **Test Coverage** | E2E tests, integration tests | Verify full flow |
-| **Code Review** | Checklist, PR template | "Did you check X?" |
+| Type              | Description                            | Example                               |
+| ----------------- | -------------------------------------- | ------------------------------------- |
+| **Documentation** | Write it down so people know           | Update thinking guide                 |
+| **Architecture**  | Make the error impossible structurally | Type-safe wrappers                    |
+| **Compile-time**  | TypeScript strict, no any              | Signature change causes compile error |
+| **Runtime**       | Monitoring, alerts, scans              | Detect orphan entities                |
+| **Test Coverage** | E2E tests, integration tests           | Verify full flow                      |
+| **Code Review**   | Checklist, PR template                 | "Did you check X?"                    |
 
 ### 4. Systematic Expansion
 
@@ -76,25 +77,29 @@ Please output analysis in this format:
 ## Bug Analysis: [Short Description]
 
 ### 1. Root Cause Category
+
 - **Category**: [A/B/C/D/E] - [Category Name]
 - **Specific Cause**: [Detailed description]
 
 ### 2. Why Fixes Failed (if applicable)
+
 1. [First attempt]: [Why it failed]
-2. [Second attempt]: [Why it failed]
-...
+2. [Second attempt]: [Why it failed] ...
 
 ### 3. Prevention Mechanisms
-| Priority | Mechanism | Specific Action | Status |
-|----------|-----------|-----------------|--------|
-| P0 | ... | ... | TODO/DONE |
+
+| Priority | Mechanism | Specific Action | Status    |
+| -------- | --------- | --------------- | --------- |
+| P0       | ...       | ...             | TODO/DONE |
 
 ### 4. Systematic Expansion
+
 - **Similar Issues**: [List places with similar problems]
 - **Design Improvement**: [Architecture-level suggestions]
 - **Process Improvement**: [Development process suggestions]
 
 ### 5. Knowledge Capture
+
 - [ ] [Documents to update / tickets to create]
 ```
 
@@ -102,9 +107,11 @@ Please output analysis in this format:
 
 ## Core Philosophy
 
-> **The value of debugging is not in fixing the bug, but in making this class of bugs never happen again.**
+> **The value of debugging is not in fixing the bug, but in making this class of
+> bugs never happen again.**
 
 Three levels of insight:
+
 1. **Tactical**: How to fix THIS bug
 2. **Strategic**: How to prevent THIS CLASS of bugs
 3. **Philosophical**: How to expand thinking patterns
@@ -117,14 +124,18 @@ Three levels of insight:
 
 **IMPORTANT**: After completing the analysis above, you MUST immediately:
 
-1. **Update spec/guides** - Don't just list TODOs, actually update the relevant files:
+1. **Update spec/guides** - Don't just list TODOs, actually update the relevant
+   files:
    - If it's a cross-platform issue → update `cross-platform-thinking-guide.md`
    - If it's a cross-layer issue → update `cross-layer-thinking-guide.md`
    - If it's a code reuse issue → update `code-reuse-thinking-guide.md`
    - If it's domain-specific → update `backend/*.md` or `frontend/*.md`
 
-2. **Sync templates** - After updating `.trellis/spec/`, sync to `src/templates/markdown/spec/`
+2. **Sync templates** - After updating `.trellis/spec/`, sync to
+   `src/templates/markdown/spec/`
 
-3. **Commit the spec updates** - This is the primary output, not just the analysis text
+3. **Commit the spec updates** - This is the primary output, not just the
+   analysis text
 
-> **The analysis is worthless if it stays in chat. The value is in the updated specs.**
+> **The analysis is worthless if it stays in chat. The value is in the updated
+> specs.**

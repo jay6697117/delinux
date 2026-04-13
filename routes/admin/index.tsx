@@ -1,8 +1,9 @@
 // 管理后台面板
 
 import { define } from "../../utils.ts";
-import { getKv } from "../../utils/db.ts";
-import { getPostsByIds } from "../../utils/posts.ts";
+import { getDb } from "../../utils/db.ts";
+import { getAllUsers } from "../../utils/auth.ts";
+import { getLatestPosts } from "../../utils/posts.ts";
 import { timeAgo } from "../../utils/time.ts";
 import type { Post, User } from "../../utils/state.ts";
 
@@ -13,28 +14,29 @@ export const handler = define.handlers({
     }
     const url = new URL(ctx.req.url);
     const tab = url.searchParams.get("tab") || "overview";
-    const kv = await getKv();
-    let userCount = 0, postCount = 0, replyCount = 0;
-    const users: User[] = [];
+    const db = getDb();
+
+    // SQL COUNT 替代 kv.list 遍历计数
+    const [userCountResult, postCountResult, replyCountResult] = await Promise
+      .all([
+        db.execute("SELECT COUNT(*) as cnt FROM users"),
+        db.execute("SELECT COUNT(*) as cnt FROM posts"),
+        db.execute("SELECT COUNT(*) as cnt FROM replies"),
+      ]);
+
+    const userCount = userCountResult.rows[0].cnt as number;
+    const postCount = postCountResult.rows[0].cnt as number;
+    const replyCount = replyCountResult.rows[0].cnt as number;
+
+    let users: User[] = [];
     let posts: Post[] = [];
 
-    const userEntries = kv.list<User>({ prefix: ["users"] }, { limit: 200 });
-    for await (const entry of userEntries) {
-      userCount++;
-      if (tab === "users") users.push(entry.value);
+    if (tab === "users") {
+      users = await getAllUsers();
+    } else if (tab === "posts") {
+      const result = await getLatestPosts(200);
+      posts = result.posts;
     }
-
-    const postEntries = kv.list<string>({ prefix: ["posts_latest"] }, {
-      limit: 200,
-    });
-    const postIds: string[] = [];
-    for await (const entry of postEntries) {
-      postCount++;
-      postIds.push(entry.value as string);
-    }
-    const loadedPosts = await getPostsByIds(postIds);
-    replyCount = loadedPosts.reduce((sum, post) => sum + post.replyCount, 0);
-    if (tab === "posts") posts = loadedPosts;
 
     return { data: { tab, userCount, postCount, replyCount, users, posts } };
   },
@@ -107,13 +109,13 @@ export default define.page<typeof handler>(function AdminPage({ data }) {
                 marginBottom: "1rem",
               }}
             >
-              一键清空 Deno KV
+              一键清空 Turso
               数据库（包括云端部署和本地的所有用户、帖子和关联信息）。此操作不可逆！
             </p>
             <form
               method="POST"
               action="/api/admin/clear-all"
-              onsubmit="return confirm('警告：您即将强制清空线上线下的所有 Deno KV 数据库内容，且不可恢复！\n（确定继续请点击“确定”）')"
+              onsubmit="return confirm('警告：您即将强制清空线上线下的所有 Turso 数据库内容，且不可恢复！\n（确定继续请点击“确定”）')"
             >
               <button type="submit" class="btn btn-danger">
                 🔥 确认清空全部数据

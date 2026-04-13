@@ -64,7 +64,14 @@ export default define.page<typeof handler>(function ChangePassword({ data }) {
           {success && (
             <div class="alert alert-success">
               ✅ 密码修改成功！
-              <a href="/" style={{ marginLeft: "8px", color: "inherit", textDecoration: "underline" }}>
+              <a
+                href="/"
+                style={{
+                  marginLeft: "8px",
+                  color: "inherit",
+                  textDecoration: "underline",
+                }}
+              >
                 返回首页
               </a>
             </div>

@@ -1,12 +1,14 @@
 # Thinking Guides
 
-> **Purpose**: Expand your thinking to catch things you might not have considered.
+> **Purpose**: Expand your thinking to catch things you might not have
+> considered.
 
 ---
 
 ## Why Thinking Guides?
 
-**Most bugs and tech debt come from "didn't think of that"**, not from lack of skill:
+**Most bugs and tech debt come from "didn't think of that"**, not from lack of
+skill:
 
 - Didn't think about what happens at layer boundaries → cross-layer bugs
 - Didn't think about code patterns repeating → duplicated code everywhere
@@ -19,10 +21,10 @@ These guides help you **ask the right questions before coding**.
 
 ## Available Guides
 
-| Guide | Purpose | When to Use |
-|-------|---------|-------------|
-| [Code Reuse Thinking Guide](./code-reuse-thinking-guide.md) | Identify patterns and reduce duplication | When you notice repeated patterns |
-| [Cross-Layer Thinking Guide](./cross-layer-thinking-guide.md) | Think through data flow across layers | Features spanning multiple layers |
+| Guide                                                         | Purpose                                  | When to Use                       |
+| ------------------------------------------------------------- | ---------------------------------------- | --------------------------------- |
+| [Code Reuse Thinking Guide](./code-reuse-thinking-guide.md)   | Identify patterns and reduce duplication | When you notice repeated patterns |
+| [Cross-Layer Thinking Guide](./cross-layer-thinking-guide.md) | Think through data flow across layers    | Features spanning multiple layers |
 
 ---
 

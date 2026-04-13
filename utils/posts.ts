@@ -1,12 +1,8 @@
-// 帖子相关业务逻辑
+// 帖子相关业务逻辑（Turso SQL 版本）
 
-import { generateId, getKv, invertTimestamp } from "./db.ts";
+import { generateId, getDb } from "./db.ts";
 import { invalidateCache } from "./cache.ts";
 import type { Post, Reply } from "./state.ts";
-
-export interface PostKvReader {
-  get<T>(key: Deno.KvKey): Promise<{ value: T | null }>;
-}
 
 // ===== 帖子操作 =====
 
@@ -18,10 +14,9 @@ export async function createPost(
   authorName: string,
   boardSlug: string,
 ): Promise<Post> {
-  const kv = await getKv();
+  const db = getDb();
   const id = generateId();
   const now = Date.now();
-  const invertedTime = invertTimestamp(now);
 
   const post: Post = {
     id,
@@ -36,25 +31,13 @@ export async function createPost(
     likeCount: 0,
   };
 
-  // 原子操作：写入帖子 + 索引 + 更新版块计数
-  const boardEntry = await kv.get<{ postCount: number }>(["boards", boardSlug]);
-  const currentCount = boardEntry.value?.postCount || 0;
-
-  await kv.atomic()
-    .set(["posts", id], post)
-    .set(["posts_by_board", boardSlug, invertedTime, id], id)
-    .set(["posts_by_user", authorId, invertedTime, id], id)
-    .set(["posts_latest", invertedTime, id], id)
-    .commit();
-
-  // 单独更新版块计数（避免原子操作过大）
-  if (boardEntry.value) {
-    const updatedBoard = { ...boardEntry.value, postCount: currentCount + 1 };
-    await kv.set(["boards", boardSlug], updatedBoard);
-  }
-
-  // 建立搜索索引
-  await indexPost(id, title, boardSlug, now);
+  // 一条 INSERT，索引和 FTS5 由数据库自动维护
+  await db.execute({
+    sql:
+      `INSERT INTO posts (id, title, content, author_id, author_name, board_slug, created_at, last_reply_at, reply_count, like_count)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)`,
+    args: [id, title, content, authorId, authorName, boardSlug, now, now],
+  });
 
   // 失效首页和版块缓存
   invalidateCache("home:");
@@ -65,52 +48,104 @@ export async function createPost(
 
 // 获取帖子
 export async function getPost(id: string): Promise<Post | null> {
-  const kv = await getKv();
-  const entry = await kv.get<Post>(["posts", id], { consistency: "eventual" });
-  return entry.value;
+  const db = getDb();
+  const result = await db.execute({
+    sql: "SELECT * FROM posts WHERE id = ?",
+    args: [id],
+  });
+  if (result.rows.length === 0) return null;
+  return rowToPost(result.rows[0]);
 }
 
-// 批量获取帖子（使用 getMany 单次请求替代 N 次并行 get，减少网络往返）
-export async function getPostsByIds(
-  ids: string[],
-  kvReader?: PostKvReader,
-): Promise<Post[]> {
+// 批量获取帖子
+export async function getPostsByIds(ids: string[]): Promise<Post[]> {
   if (ids.length === 0) return [];
-  const kv = kvReader ?? await getKv();
-  // getMany 将 N 次网络请求合并为 1 次
-  const keys = ids.map((id) => ["posts", id] as Deno.KvKey);
-  const entries = await (kv as Deno.Kv).getMany<Post[]>(keys, {
-    consistency: "eventual",
+  const db = getDb();
+  // 使用 IN 查询一次获取所有帖子
+  const placeholders = ids.map(() => "?").join(", ");
+  const result = await db.execute({
+    sql: `SELECT * FROM posts WHERE id IN (${placeholders})`,
+    args: ids,
   });
-  return entries
-    .filter((entry: Deno.KvEntryMaybe<Post>) => entry.value !== null)
-    .map((entry: Deno.KvEntryMaybe<Post>) => entry.value as Post);
+  // 按原始 ID 顺序返回
+  const postMap = new Map<string, Post>();
+  for (const row of result.rows) {
+    const post = rowToPost(row);
+    postMap.set(post.id, post);
+  }
+  return ids.map((id) => postMap.get(id)).filter((p): p is Post => p != null);
+}
+
+// 获取最新帖子列表（首页用）
+export async function getLatestPosts(
+  limit = 20,
+  offset = 0,
+): Promise<{ posts: Post[]; hasMore: boolean }> {
+  const db = getDb();
+  const result = await db.execute({
+    sql: "SELECT * FROM posts ORDER BY last_reply_at DESC LIMIT ? OFFSET ?",
+    args: [limit + 1, offset],
+  });
+  const hasMore = result.rows.length > limit;
+  const posts = result.rows.slice(0, limit).map(rowToPost);
+  return { posts, hasMore };
+}
+
+// 获取版块帖子列表
+export async function getBoardPosts(
+  boardSlug: string,
+  limit = 20,
+  offset = 0,
+): Promise<{ posts: Post[]; hasMore: boolean }> {
+  const db = getDb();
+  const result = await db.execute({
+    sql:
+      `SELECT * FROM posts WHERE board_slug = ? ORDER BY last_reply_at DESC LIMIT ? OFFSET ?`,
+    args: [boardSlug, limit + 1, offset],
+  });
+  const hasMore = result.rows.length > limit;
+  const posts = result.rows.slice(0, limit).map(rowToPost);
+  return { posts, hasMore };
+}
+
+// 获取用户的帖子列表
+export async function getUserPosts(
+  userId: string,
+  limit = 20,
+): Promise<Post[]> {
+  const db = getDb();
+  const result = await db.execute({
+    sql:
+      `SELECT * FROM posts WHERE author_id = ? ORDER BY created_at DESC LIMIT ?`,
+    args: [userId, limit],
+  });
+  return result.rows.map(rowToPost);
 }
 
 // 删除帖子（管理员）
 export async function deletePost(id: string): Promise<boolean> {
-  const kv = await getKv();
-  const postEntry = await kv.get<Post>(["posts", id], {
-    consistency: "eventual",
+  const db = getDb();
+  const postResult = await db.execute({
+    sql: "SELECT board_slug FROM posts WHERE id = ?",
+    args: [id],
   });
-  if (!postEntry.value) return false;
+  if (postResult.rows.length === 0) return false;
 
-  const post = postEntry.value;
-  const invertedCreated = invertTimestamp(post.lastReplyAt);
+  const boardSlug = postResult.rows[0].board_slug as string;
 
-  // 删除帖子和相关索引
-  await kv.atomic()
-    .delete(["posts", id])
-    .delete(["posts_by_board", post.boardSlug, invertedCreated, id])
-    .delete([
-      "posts_by_user",
-      post.authorId,
-      invertTimestamp(post.createdAt),
-      id,
-    ])
-    .delete(["posts_latest", invertedCreated, id])
-    .commit();
+  // 批量删除帖子及关联数据
+  await db.batch([
+    { sql: "DELETE FROM replies WHERE post_id = ?", args: [id] },
+    { sql: "DELETE FROM likes WHERE post_id = ?", args: [id] },
+    {
+      sql: "DELETE FROM favorites WHERE post_id = ?",
+      args: [id],
+    },
+    { sql: "DELETE FROM posts WHERE id = ?", args: [id] },
+  ]);
 
+  invalidateCache("home:");
+  invalidateCache(`board:${boardSlug}`);
   return true;
 }
 
@@ -123,19 +158,18 @@ export async function createReply(
   authorId: string,
   authorName: string,
 ): Promise<Reply | null> {
-  const kv = await getKv();
+  const db = getDb();
 
-  // 获取帖子（eventual 降低读延迟，atomic 保证写入安全）
-  const postEntry = await kv.get<Post>(["posts", postId], {
-    consistency: "eventual",
+  // 检查帖子是否存在
+  const postResult = await db.execute({
+    sql: "SELECT board_slug FROM posts WHERE id = ?",
+    args: [postId],
   });
-  if (!postEntry.value) return null;
+  if (postResult.rows.length === 0) return null;
 
-  const post = postEntry.value;
+  const boardSlug = postResult.rows[0].board_slug as string;
   const id = generateId();
   const now = Date.now();
-  const oldInvertedTime = invertTimestamp(post.lastReplyAt);
-  const newInvertedTime = invertTimestamp(now);
 
   const reply: Reply = {
     id,
@@ -146,30 +180,24 @@ export async function createReply(
     createdAt: now,
   };
 
-  // 更新帖子的回复计数和最后回复时间
-  const updatedPost: Post = {
-    ...post,
-    replyCount: post.replyCount + 1,
-    lastReplyAt: now,
-  };
+  // 插入回复 + 更新帖子统计（batch 保证原子性）
+  await db.batch([
+    {
+      sql:
+        `INSERT INTO replies (id, post_id, content, author_id, author_name, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)`,
+      args: [id, postId, content, authorId, authorName, now],
+    },
+    {
+      sql:
+        `UPDATE posts SET reply_count = reply_count + 1, last_reply_at = ? WHERE id = ?`,
+      args: [now, postId],
+    },
+  ]);
 
-  await kv.atomic()
-    .set(["replies", postId, id], reply)
-    .set(["replies_by_user", authorId, invertTimestamp(now)], {
-      postId,
-      replyId: id,
-    })
-    .set(["posts", postId], updatedPost)
-    // 更新索引：删除旧的，插入新的
-    .delete(["posts_by_board", post.boardSlug, oldInvertedTime, postId])
-    .set(["posts_by_board", post.boardSlug, newInvertedTime, postId], postId)
-    .delete(["posts_latest", oldInvertedTime, postId])
-    .set(["posts_latest", newInvertedTime, postId], postId)
-    .commit();
-
-  // 失效首页和版块缓存（回复会更新帖子排序）
+  // 失效缓存
   invalidateCache("home:");
-  invalidateCache(`board:${post.boardSlug}`);
+  invalidateCache(`board:${boardSlug}`);
 
   return reply;
 }
@@ -177,32 +205,20 @@ export async function createReply(
 // 获取帖子的回复列表
 export async function getReplies(
   postId: string,
-  cursor?: string,
+  _cursor?: string,
   limit = 20,
 ): Promise<{ items: Reply[]; cursor?: string; hasMore: boolean }> {
-  const kv = await getKv();
-  const entries = kv.list<Reply>({ prefix: ["replies", postId] }, {
-    limit: limit + 1,
-    cursor,
-    consistency: "eventual",
+  const db = getDb();
+  const result = await db.execute({
+    sql:
+      `SELECT * FROM replies WHERE post_id = ? ORDER BY created_at ASC LIMIT ?`,
+    args: [postId, limit + 1],
   });
 
-  const items: Reply[] = [];
-  let nextCursor: string | undefined;
-  let count = 0;
+  const hasMore = result.rows.length > limit;
+  const items = result.rows.slice(0, limit).map(rowToReply);
 
-  for await (const entry of entries) {
-    count++;
-    if (count > limit) break;
-    items.push(entry.value);
-    nextCursor = entries.cursor;
-  }
-
-  return {
-    items: items.reverse(), // 最新回复排在上面
-    cursor: count > limit ? nextCursor : undefined,
-    hasMore: count > limit,
-  };
+  return { items, hasMore };
 }
 
 // ===== 点赞操作 =====
@@ -211,35 +227,40 @@ export async function toggleLike(
   postId: string,
   userId: string,
 ): Promise<boolean> {
-  const kv = await getKv();
-  const likeKey: Deno.KvKey = ["likes", postId, userId];
-  // 并行读取点赞状态和帖子数据（eventual 降低延迟）
-  const [existing, postEntry] = await Promise.all([
-    kv.get(likeKey, { consistency: "eventual" }),
-    kv.get<Post>(["posts", postId], { consistency: "eventual" }),
-  ]);
-  if (!postEntry.value) return false;
+  const db = getDb();
 
-  const post = postEntry.value;
+  // 检查是否已点赞
+  const existing = await db.execute({
+    sql: "SELECT 1 FROM likes WHERE post_id = ? AND user_id = ?",
+    args: [postId, userId],
+  });
 
-  if (existing.value) {
+  if (existing.rows.length > 0) {
     // 取消点赞
-    await kv.atomic()
-      .delete(likeKey)
-      .delete(["likes_by_user", userId, postId])
-      .set(["posts", postId], {
-        ...post,
-        likeCount: Math.max(0, post.likeCount - 1),
-      })
-      .commit();
-    return false; // 返回当前是否已点赞
+    await db.batch([
+      {
+        sql: "DELETE FROM likes WHERE post_id = ? AND user_id = ?",
+        args: [postId, userId],
+      },
+      {
+        sql:
+          "UPDATE posts SET like_count = MAX(0, like_count - 1) WHERE id = ?",
+        args: [postId],
+      },
+    ]);
+    return false;
   } else {
     // 点赞
-    await kv.atomic()
-      .set(likeKey, true)
-      .set(["likes_by_user", userId, postId], true)
-      .set(["posts", postId], { ...post, likeCount: post.likeCount + 1 })
-      .commit();
+    await db.batch([
+      {
+        sql: "INSERT OR IGNORE INTO likes (post_id, user_id) VALUES (?, ?)",
+        args: [postId, userId],
+      },
+      {
+        sql: "UPDATE posts SET like_count = like_count + 1 WHERE id = ?",
+        args: [postId],
+      },
+    ]);
     return true;
   }
 }
@@ -248,11 +269,12 @@ export async function isLiked(
   postId: string,
   userId: string,
 ): Promise<boolean> {
-  const kv = await getKv();
-  const entry = await kv.get(["likes", postId, userId], {
-    consistency: "eventual",
+  const db = getDb();
+  const result = await db.execute({
+    sql: "SELECT 1 FROM likes WHERE post_id = ? AND user_id = ?",
+    args: [postId, userId],
   });
-  return !!entry.value;
+  return result.rows.length > 0;
 }
 
 // ===== 收藏操作 =====
@@ -261,21 +283,25 @@ export async function toggleFavorite(
   postId: string,
   userId: string,
 ): Promise<boolean> {
-  const kv = await getKv();
-  const favKey: Deno.KvKey = ["favorites", userId, postId];
-  const existing = await kv.get(favKey, { consistency: "eventual" });
+  const db = getDb();
 
-  if (existing.value) {
-    await kv.atomic()
-      .delete(favKey)
-      .delete(["favorites_by_post", postId, userId])
-      .commit();
+  const existing = await db.execute({
+    sql: "SELECT 1 FROM favorites WHERE user_id = ? AND post_id = ?",
+    args: [userId, postId],
+  });
+
+  if (existing.rows.length > 0) {
+    await db.execute({
+      sql: "DELETE FROM favorites WHERE user_id = ? AND post_id = ?",
+      args: [userId, postId],
+    });
     return false;
   } else {
-    await kv.atomic()
-      .set(favKey, true)
-      .set(["favorites_by_post", postId, userId], true)
-      .commit();
+    await db.execute({
+      sql:
+        "INSERT INTO favorites (user_id, post_id, created_at) VALUES (?, ?, ?)",
+      args: [userId, postId, Date.now()],
+    });
     return true;
   }
 }
@@ -284,140 +310,100 @@ export async function isFavorited(
   postId: string,
   userId: string,
 ): Promise<boolean> {
-  const kv = await getKv();
-  const entry = await kv.get(["favorites", userId, postId], {
-    consistency: "eventual",
+  const db = getDb();
+  const result = await db.execute({
+    sql: "SELECT 1 FROM favorites WHERE user_id = ? AND post_id = ?",
+    args: [userId, postId],
   });
-  return !!entry.value;
+  return result.rows.length > 0;
 }
 
 // 获取用户的收藏列表
 export async function getUserFavorites(
   userId: string,
-  cursor?: string,
+  _cursor?: string,
   limit = 20,
 ): Promise<{ items: Post[]; cursor?: string; hasMore: boolean }> {
-  const kv = await getKv();
-  const entries = kv.list<boolean>({ prefix: ["favorites", userId] }, {
-    limit: limit + 1,
-    cursor,
-    consistency: "eventual",
+  const db = getDb();
+  const result = await db.execute({
+    sql: `SELECT p.* FROM favorites f
+          JOIN posts p ON p.id = f.post_id
+          WHERE f.user_id = ?
+          ORDER BY f.created_at DESC
+          LIMIT ?`,
+    args: [userId, limit + 1],
   });
 
-  const postIds: string[] = [];
-  let nextCursor: string | undefined;
-  let count = 0;
+  const hasMore = result.rows.length > limit;
+  const items = result.rows.slice(0, limit).map(rowToPost);
 
-  for await (const entry of entries) {
-    count++;
-    if (count > limit) break;
-    // key 格式：["favorites", userId, postId]
-    postIds.push(entry.key[2] as string);
-    nextCursor = entries.cursor;
-  }
-
-  const posts = await getPostsByIds(postIds);
-
-  return {
-    items: posts,
-    cursor: count > limit ? nextCursor : undefined,
-    hasMore: count > limit,
-  };
+  return { items, hasMore };
 }
 
-// ===== 搜索索引 =====
+// ===== 搜索 =====
 
-// 对标题和内容进行分词并建立索引
-async function indexPost(
-  postId: string,
-  title: string,
-  boardSlug: string,
-  createdAt: number,
-): Promise<void> {
-  const kv = await getKv();
-  const words = tokenize(title);
-
-  const ops = kv.atomic();
-  for (const word of words) {
-    ops.set(["search_words", word, postId], { title, boardSlug, createdAt });
-  }
-  await ops.commit();
-}
-
-// 增强分词：中文单字/双字/三字组合，英文按空格，支持前缀匹配
-function tokenize(text: string): string[] {
-  const words = new Set<string>();
-  const lower = text.toLowerCase().trim();
-
-  // 英文单词（支持带连字符的词）
-  const enWords = lower.match(/[a-zA-Z0-9][-a-zA-Z0-9]*/g) || [];
-  for (const w of enWords) {
-    if (w.length >= 2) {
-      words.add(w);
-      // 添加长词的前缀（用于前缀搜索）
-      if (w.length > 4) words.add(w.substring(0, 4));
-    }
-  }
-
-  // 中文单字、双字和三字组合
-  const cnChars = lower.match(/[\u4e00-\u9fa5]/g) || [];
-  for (const ch of cnChars) {
-    words.add(ch);
-  }
-  // 双字组合
-  for (let i = 0; i < cnChars.length - 1; i++) {
-    words.add(cnChars[i] + cnChars[i + 1]);
-  }
-  // 三字组合（提高长词匹配精度）
-  for (let i = 0; i < cnChars.length - 2; i++) {
-    words.add(cnChars[i] + cnChars[i + 1] + cnChars[i + 2]);
-  }
-
-  return Array.from(words);
-}
-
-// 搜索帖子（支持多词交叉搜索 + 相关度排序）
+// 搜索帖子（使用 FTS5 全文搜索，替代手动分词方案）
 export async function searchPosts(
   query: string,
   limit = 30,
 ): Promise<Post[]> {
-  const kv = await getKv();
-  const words = tokenize(query);
-  if (words.length === 0) return [];
+  if (!query.trim()) return [];
 
-  // 收集所有匹配的帖子 ID 及匹配词数
-  const postScores = new Map<string, number>();
+  const db = getDb();
 
-  // 并行查询所有搜索词（替代串行 for...of 循环，减少总延迟）
-  const searchResults = await Promise.all(
-    words.map(async (word) => {
-      const entries = kv.list<
-        { title: string; boardSlug: string; createdAt: number }
-      >(
-        { prefix: ["search_words", word] },
-        { limit: 50, consistency: "eventual" },
-      );
-      const ids: string[] = [];
-      for await (const entry of entries) {
-        ids.push(entry.key[2] as string);
-      }
-      return ids;
-    }),
-  );
+  // FTS5 支持中文和英文搜索
+  // 将空格分隔的词用 AND 连接提高搜索精度
+  const ftsQuery = query.trim().split(/\s+/).join(" AND ");
 
-  for (const ids of searchResults) {
-    for (const postId of ids) {
-      postScores.set(postId, (postScores.get(postId) || 0) + 1);
-    }
+  try {
+    const result = await db.execute({
+      sql: `SELECT p.* FROM posts_fts f
+            JOIN posts p ON p.rowid = f.rowid
+            WHERE posts_fts MATCH ?
+            ORDER BY rank
+            LIMIT ?`,
+      args: [ftsQuery, limit],
+    });
+    return result.rows.map(rowToPost);
+  } catch {
+    // FTS5 查询语法错误时回退到 LIKE 搜索
+    const result = await db.execute({
+      sql: `SELECT * FROM posts
+            WHERE title LIKE ? OR content LIKE ?
+            ORDER BY last_reply_at DESC
+            LIMIT ?`,
+      args: [`%${query}%`, `%${query}%`, limit],
+    });
+    return result.rows.map(rowToPost);
   }
+}
 
-  if (postScores.size === 0) return [];
+// ===== 行数据 → TypeScript 对象转换 =====
 
-  // 按匹配词数降序排序
-  const sortedIds = Array.from(postScores.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, limit)
-    .map(([id]) => id);
+// deno-lint-ignore no-explicit-any
+function rowToPost(row: any): Post {
+  return {
+    id: row.id as string,
+    title: row.title as string,
+    content: row.content as string,
+    authorId: row.author_id as string,
+    authorName: row.author_name as string,
+    boardSlug: row.board_slug as string,
+    createdAt: row.created_at as number,
+    lastReplyAt: row.last_reply_at as number,
+    replyCount: row.reply_count as number,
+    likeCount: row.like_count as number,
+  };
+}
 
-  return await getPostsByIds(sortedIds);
+// deno-lint-ignore no-explicit-any
+function rowToReply(row: any): Reply {
+  return {
+    id: row.id as string,
+    postId: row.post_id as string,
+    content: row.content as string,
+    authorId: row.author_id as string,
+    authorName: row.author_name as string,
+    createdAt: row.created_at as number,
+  };
 }

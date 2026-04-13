@@ -1,56 +1,37 @@
 import { define } from "../../utils.ts";
 import { getBoardBySlug } from "../../utils/boards.ts";
-import { getKv } from "../../utils/db.ts";
-import { getPostsByIds } from "../../utils/posts.ts";
+import { getBoardPosts } from "../../utils/posts.ts";
 import { timeAgo } from "../../utils/time.ts";
 import { getCachedData, setCachedData } from "../../utils/cache.ts";
 
 export const handler = define.handlers({
   async GET(ctx) {
     const { slug } = ctx.params;
-    // O(1) 查找版块
     const board = getBoardBySlug(slug);
     if (!board) return ctx.renderNotFound();
 
     const url = new URL(ctx.req.url);
-    const cursor = url.searchParams.get("cursor") || undefined;
+    const page = parseInt(url.searchParams.get("page") || "0");
     const limit = 20;
 
     // 无分页时使用内存缓存（30 秒 TTL）
-    const cacheKey = cursor ? "" : `board:${slug}`;
+    const cacheKey = page === 0 ? `board:${slug}` : "";
     if (cacheKey) {
       const cached = getCachedData<{
-        board: ReturnType<typeof getBoardBySlug>;
-        posts: Awaited<ReturnType<typeof getPostsByIds>>;
+        board: typeof board;
+        posts: Awaited<ReturnType<typeof getBoardPosts>>["posts"];
         hasMore: boolean;
-        nextCursor: string | undefined;
+        page: number;
         slug: string;
       }>(cacheKey);
       if (cached) return { data: cached };
     }
 
-    const kv = await getKv();
-    const entries = kv.list<string>({ prefix: ["posts_by_board", slug] }, {
-      limit: limit + 1,
-      cursor,
-      consistency: "eventual",
-    });
-    const postIds: string[] = [];
-    let nextCursor: string | undefined;
-    let count = 0;
-    for await (const entry of entries) {
-      count++;
-      if (count > limit) break;
-      postIds.push(entry.value as string);
-      nextCursor = entries.cursor;
-    }
-    const hasMore = count > limit;
-    // 批量并行获取帖子详情
-    const posts = await getPostsByIds(postIds);
+    // 一条 SQL 获取版块帖子
+    const { posts, hasMore } = await getBoardPosts(slug, limit, page * limit);
 
-    const data = { board, posts, hasMore, nextCursor, slug };
+    const data = { board, posts, hasMore, page, slug };
 
-    // 缓存版块数据（无分页时）
     if (cacheKey) setCachedData(cacheKey, data);
 
     return { data };
@@ -58,7 +39,7 @@ export const handler = define.handlers({
 });
 
 export default define.page<typeof handler>(function BoardPage({ data, state }) {
-  const { board, posts, hasMore, nextCursor, slug } = data;
+  const { board, posts, hasMore, page, slug } = data;
   return (
     <div>
       <div class="page-header">
@@ -102,10 +83,10 @@ export default define.page<typeof handler>(function BoardPage({ data, state }) {
               ))}
             </ul>
           )}
-        {hasMore && nextCursor && (
+        {hasMore && (
           <div class="pagination">
             <a
-              href={`/board/${slug}?cursor=${nextCursor}`}
+              href={`/board/${slug}?page=${page + 1}`}
               class="btn btn-secondary"
             >
               加载更多

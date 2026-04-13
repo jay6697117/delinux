@@ -14,9 +14,14 @@ export default define.page(function App({ Component, state, url }) {
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>DeLinux — AI + 生活社区</title>
-        <meta name="description" content="DeLinux 是一个 AI 与生活交流的纯文字论坛社区" />
+        <meta
+          name="description"
+          content="DeLinux 是一个 AI 与生活交流的纯文字论坛社区"
+        />
         {/* 关键 CSS 内联：消除首屏渲染阻塞 */}
-        <style dangerouslySetInnerHTML={{ __html: `
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
           :root{--bg-primary:#0d1117;--bg-secondary:#161b22;--bg-tertiary:#21262d;--bg-hover:#292e36;--border-color:#30363d;--text-primary:#e6edf3;--text-secondary:#8b949e;--text-tertiary:#6e7681;--text-link:#58a6ff;--accent:#58a6ff;--space-xs:4px;--space-sm:8px;--space-md:16px;--space-lg:24px;--space-xl:32px;--radius-md:6px;--radius-lg:12px;--font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",Helvetica,Arial,sans-serif;--max-width:960px;--header-height:56px}
           *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
           html{font-size:14px;-webkit-font-smoothing:antialiased}
@@ -24,10 +29,15 @@ export default define.page(function App({ Component, state, url }) {
           .header{height:var(--header-height);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);background:rgba(22,27,34,.85);border-bottom:1px solid var(--border-color)}
           .header-inner{max-width:var(--max-width);margin:0 auto;padding:0 var(--space-md);height:100%;display:flex;align-items:center;justify-content:space-between}
           .container{max-width:var(--max-width);margin:0 auto;padding:0 var(--space-md)}
-        ` }} />
+        `,
+          }}
+        />
         <link rel="preload" href="/styles.css" as="style" />
         <link rel="stylesheet" href="/styles.css" />
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+        <link
+          rel="icon"
+          href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>"
+        />
       </head>
       <body f-client-nav>
         {/* 导航栏 */}
@@ -39,13 +49,20 @@ export default define.page(function App({ Component, state, url }) {
             </a>
 
             <nav class="nav-links">
-              <a href="/" class={`nav-link ${currentPath === "/" ? "active" : ""}`}>
+              <a
+                href="/"
+                class={`nav-link ${currentPath === "/" ? "active" : ""}`}
+              >
                 首页
               </a>
               {BOARDS.map((board) => (
                 <a
                   href={`/board/${board.slug}`}
-                  class={`nav-link ${currentPath.startsWith(`/board/${board.slug}`) ? "active" : ""}`}
+                  class={`nav-link ${
+                    currentPath.startsWith(`/board/${board.slug}`)
+                      ? "active"
+                      : ""
+                  }`}
                   key={board.slug}
                 >
                   {board.icon} {board.name}
@@ -54,7 +71,9 @@ export default define.page(function App({ Component, state, url }) {
             </nav>
 
             <div class="header-actions">
-              <a href="/search" class="btn btn-ghost btn-icon" title="搜索">🔍</a>
+              <a href="/search" class="btn btn-ghost btn-icon" title="搜索">
+                🔍
+              </a>
               {/* 汉堡菜单按钮（移动端显示） */}
               <button
                 class="menu-toggle"
@@ -63,21 +82,25 @@ export default define.page(function App({ Component, state, url }) {
               >
                 ☰
               </button>
-              {user ? (
-                <>
-                  <a href="/post/new" class="btn btn-primary">发帖</a>
-                  <a href={`/user/${user.id}`} class="btn btn-ghost">{user.username}</a>
-                  {user.role === "admin" && (
-                    <a href="/admin" class="btn btn-ghost btn-sm">管理</a>
-                  )}
-                  <a href="/auth/logout" class="btn btn-ghost btn-sm">登出</a>
-                </>
-              ) : (
-                <>
-                  <a href="/auth/login" class="btn btn-secondary">登录</a>
-                  <a href="/auth/register" class="btn btn-primary">注册</a>
-                </>
-              )}
+              {user
+                ? (
+                  <>
+                    <a href="/post/new" class="btn btn-primary">发帖</a>
+                    <a href={`/user/${user.id}`} class="btn btn-ghost">
+                      {user.username}
+                    </a>
+                    {user.role === "admin" && (
+                      <a href="/admin" class="btn btn-ghost btn-sm">管理</a>
+                    )}
+                    <a href="/auth/logout" class="btn btn-ghost btn-sm">登出</a>
+                  </>
+                )
+                : (
+                  <>
+                    <a href="/auth/login" class="btn btn-secondary">登录</a>
+                    <a href="/auth/register" class="btn btn-primary">注册</a>
+                  </>
+                )}
             </div>
           </div>
         </header>
@@ -86,7 +109,10 @@ export default define.page(function App({ Component, state, url }) {
         <div class="mobile-nav" id="mobileNav">
           <ul class="mobile-nav-links">
             <li>
-              <a href="/" class={`mobile-nav-link ${currentPath === "/" ? "active" : ""}`}>
+              <a
+                href="/"
+                class={`mobile-nav-link ${currentPath === "/" ? "active" : ""}`}
+              >
                 🏠 首页
               </a>
             </li>
@@ -94,58 +120,78 @@ export default define.page(function App({ Component, state, url }) {
               <li key={board.slug}>
                 <a
                   href={`/board/${board.slug}`}
-                  class={`mobile-nav-link ${currentPath.startsWith(`/board/${board.slug}`) ? "active" : ""}`}
+                  class={`mobile-nav-link ${
+                    currentPath.startsWith(`/board/${board.slug}`)
+                      ? "active"
+                      : ""
+                  }`}
                 >
                   {board.icon} {board.name}
                 </a>
               </li>
             ))}
-            <li><div class="mobile-nav-divider" /></li>
             <li>
-              <a href="/search" class={`mobile-nav-link ${currentPath === "/search" ? "active" : ""}`}>
+              <div class="mobile-nav-divider" />
+            </li>
+            <li>
+              <a
+                href="/search"
+                class={`mobile-nav-link ${
+                  currentPath === "/search" ? "active" : ""
+                }`}
+              >
                 🔍 搜索
               </a>
             </li>
-            {user ? (
-              <>
-                <li>
-                  <a href="/post/new" class={`mobile-nav-link ${currentPath === "/post/new" ? "active" : ""}`}>
-                    ✍️ 发帖
-                  </a>
-                </li>
-                <li>
-                  <a href={`/user/${user.id}`} class="mobile-nav-link">
-                    👤 {user.username}
-                  </a>
-                </li>
-                {user.role === "admin" && (
+            {user
+              ? (
+                <>
                   <li>
-                    <a href="/admin" class="mobile-nav-link">
-                      🛡️ 管理后台
+                    <a
+                      href="/post/new"
+                      class={`mobile-nav-link ${
+                        currentPath === "/post/new" ? "active" : ""
+                      }`}
+                    >
+                      ✍️ 发帖
                     </a>
                   </li>
-                )}
-                <li><div class="mobile-nav-divider" /></li>
-                <li>
-                  <a href="/auth/logout" class="mobile-nav-link">
-                    🚪 登出
-                  </a>
-                </li>
-              </>
-            ) : (
-              <>
-                <li>
-                  <a href="/auth/login" class="mobile-nav-link">
-                    🔑 登录
-                  </a>
-                </li>
-                <li>
-                  <a href="/auth/register" class="mobile-nav-link">
-                    📝 注册
-                  </a>
-                </li>
-              </>
-            )}
+                  <li>
+                    <a href={`/user/${user.id}`} class="mobile-nav-link">
+                      👤 {user.username}
+                    </a>
+                  </li>
+                  {user.role === "admin" && (
+                    <li>
+                      <a href="/admin" class="mobile-nav-link">
+                        🛡️ 管理后台
+                      </a>
+                    </li>
+                  )}
+                  <li>
+                    <div class="mobile-nav-divider" />
+                  </li>
+                  <li>
+                    <a href="/auth/logout" class="mobile-nav-link">
+                      🚪 登出
+                    </a>
+                  </li>
+                </>
+              )
+              : (
+                <>
+                  <li>
+                    <a href="/auth/login" class="mobile-nav-link">
+                      🔑 登录
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/auth/register" class="mobile-nav-link">
+                      📝 注册
+                    </a>
+                  </li>
+                </>
+              )}
           </ul>
         </div>
 
@@ -164,7 +210,9 @@ export default define.page(function App({ Component, state, url }) {
         </footer>
 
         {/* 汉堡菜单脚本 */}
-        <script dangerouslySetInnerHTML={{ __html: `
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
           (function() {
             var btn = document.getElementById('menuToggle');
             var nav = document.getElementById('mobileNav');
@@ -182,10 +230,14 @@ export default define.page(function App({ Component, state, url }) {
               });
             });
           })();
-        `}} />
+        `,
+          }}
+        />
 
         {/* 页面跳转进度条（兼容 Partial 客户端导航 + 传统全页面刷新） */}
-        <script dangerouslySetInnerHTML={{ __html: `
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
           (function() {
             // 创建进度条 DOM
             var bar = document.createElement('div');
@@ -255,7 +307,9 @@ export default define.page(function App({ Component, state, url }) {
             });
             window.addEventListener('pageshow', function() { done(); });
           })();
-        `}} />
+        `,
+          }}
+        />
       </body>
     </html>
   );

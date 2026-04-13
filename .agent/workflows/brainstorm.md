@@ -5,49 +5,54 @@ description: "Brainstorm - Requirements Discovery (AI Coding Enhanced)"
 
 # Brainstorm - Requirements Discovery (AI Coding Enhanced)
 
-Guide AI through collaborative requirements discovery **before implementation**, optimized for AI coding workflows:
+Guide AI through collaborative requirements discovery **before implementation**,
+optimized for AI coding workflows:
 
-* **Task-first** (capture ideas immediately)
-* **Action-before-asking** (reduce low-value questions)
-* **Research-first** for technical choices (avoid asking users to invent options)
-* **Diverge → Converge** (expand thinking, then lock MVP)
+- **Task-first** (capture ideas immediately)
+- **Action-before-asking** (reduce low-value questions)
+- **Research-first** for technical choices (avoid asking users to invent
+  options)
+- **Diverge → Converge** (expand thinking, then lock MVP)
 
 ---
 
 ## When to Use
 
-Triggered from `/start` when the user describes a development task, especially when:
+Triggered from `/start` when the user describes a development task, especially
+when:
 
-* requirements are unclear or evolving
-* there are multiple valid implementation paths
-* trade-offs matter (UX, reliability, maintainability, cost, performance)
-* the user might not know the best options up front
+- requirements are unclear or evolving
+- there are multiple valid implementation paths
+- trade-offs matter (UX, reliability, maintainability, cost, performance)
+- the user might not know the best options up front
 
 ---
 
 ## Core Principles (Non-negotiable)
 
-1. **Task-first (capture early)**
-   Always ensure a task exists at the start so the user's ideas are recorded immediately.
+1. **Task-first (capture early)** Always ensure a task exists at the start so
+   the user's ideas are recorded immediately.
 
-2. **Action before asking**
-   If you can derive the answer from repo code, docs, configs, conventions, or quick research — do that first.
+2. **Action before asking** If you can derive the answer from repo code, docs,
+   configs, conventions, or quick research — do that first.
 
-3. **One question per message**
-   Never overwhelm the user with a list of questions. Ask one, update PRD, repeat.
+3. **One question per message** Never overwhelm the user with a list of
+   questions. Ask one, update PRD, repeat.
 
-4. **Prefer concrete options**
-   For preference/decision questions, present 2–3 feasible, specific approaches with trade-offs.
+4. **Prefer concrete options** For preference/decision questions, present 2–3
+   feasible, specific approaches with trade-offs.
 
-5. **Research-first for technical choices**
-   If the decision depends on industry conventions / similar tools / established patterns, do research first, then propose options.
+5. **Research-first for technical choices** If the decision depends on industry
+   conventions / similar tools / established patterns, do research first, then
+   propose options.
 
-6. **Diverge → Converge**
-   After initial understanding, proactively consider future evolution, related scenarios, and failure/edge cases — then converge to an MVP with explicit out-of-scope.
+6. **Diverge → Converge** After initial understanding, proactively consider
+   future evolution, related scenarios, and failure/edge cases — then converge
+   to an MVP with explicit out-of-scope.
 
-7. **No meta questions**
-   Do not ask "should I search?" or "can you paste the code so I can continue?"
-   If you need information: search/inspect. If blocked: ask the minimal blocking question.
+7. **No meta questions** Do not ask "should I search?" or "can you paste the
+   code so I can continue?" If you need information: search/inspect. If blocked:
+   ask the minimal blocking question.
 
 ---
 
@@ -55,8 +60,8 @@ Triggered from `/start` when the user describes a development task, especially w
 
 Before any Q&A, ensure a task exists. If none exists, create one immediately.
 
-* Use a **temporary working title** derived from the user's message.
-* It's OK if the title is imperfect — refine later in PRD.
+- Use a **temporary working title** derived from the user's message.
+- It's OK if the title is imperfect — refine later in PRD.
 
 ```bash
 TASK_DIR=$(python3 ./.trellis/scripts/task.py create "brainstorm: <short goal>" --slug <auto>)
@@ -73,64 +78,65 @@ Create/seed `prd.md` immediately with what you know:
 
 ## What I already know
 
-* <facts from user message>
-* <facts discovered from repo/docs>
+- <facts from user message>
+- <facts discovered from repo/docs>
 
 ## Assumptions (temporary)
 
-* <assumptions to validate>
+- <assumptions to validate>
 
 ## Open Questions
 
-* <ONLY Blocking / Preference questions; keep list short>
+- <ONLY Blocking / Preference questions; keep list short>
 
 ## Requirements (evolving)
 
-* <start with what is known>
+- <start with what is known>
 
 ## Acceptance Criteria (evolving)
 
-* [ ] <testable criterion>
+- <testable criterion>
 
 ## Definition of Done (team quality bar)
 
-* Tests added/updated (unit/integration where appropriate)
-* Lint / typecheck / CI green
-* Docs/notes updated if behavior changes
-* Rollout/rollback considered if risky
+- [ ] Tests added/updated (unit/integration where appropriate)
+- Lint / typecheck / CI green
+- Docs/notes updated if behavior changes
+- Rollout/rollback considered if risky
 
 ## Out of Scope (explicit)
 
-* <what we will not do in this task>
+- <what we will not do in this task>
 
 ## Technical Notes
 
-* <files inspected, constraints, links, references>
-* <research notes summary if applicable>
+- <files inspected, constraints, links, references>
+- <research notes summary if applicable>
 ```
 
 ---
 
 ## Step 1: Auto-Context (DO THIS BEFORE ASKING QUESTIONS)
 
-Before asking questions like "what does the code look like?", gather context yourself:
+Before asking questions like "what does the code look like?", gather context
+yourself:
 
 ### Repo inspection checklist
 
-* Identify likely modules/files impacted
-* Locate existing patterns (similar features, conventions, error handling style)
-* Check configs, scripts, existing command definitions
-* Note any constraints (runtime, dependency policy, build tooling)
+- Identify likely modules/files impacted
+- Locate existing patterns (similar features, conventions, error handling style)
+- Check configs, scripts, existing command definitions
+- Note any constraints (runtime, dependency policy, build tooling)
 
 ### Documentation checklist
 
-* Look for existing PRDs/specs/templates
-* Look for command usage examples, README, ADRs if any
+- Look for existing PRDs/specs/templates
+- Look for command usage examples, README, ADRs if any
 
 Write findings into PRD:
 
-* Add to `What I already know`
-* Add constraints/links to `Technical Notes`
+- Add to `What I already know`
+- Add constraints/links to `Technical Notes`
 
 ---
 
@@ -143,7 +149,8 @@ Write findings into PRD:
 | **Moderate** | Multiple files, some ambiguity                         | Light brainstorm (2–3 high-value questions) |
 | **Complex**  | Vague goal, architectural choices, multiple approaches | Full brainstorm                             |
 
-> Note: Task already exists from Step 0. Classification only affects depth of brainstorming.
+> Note: Task already exists from Step 0. Classification only affects depth of
+> brainstorming.
 
 ---
 
@@ -155,9 +162,9 @@ Before asking ANY question, run the following gate:
 
 If answer is available via:
 
-* repo inspection (code/config)
-* docs/specs/conventions
-* quick market/OSS research
+- repo inspection (code/config)
+- docs/specs/conventions
+- quick market/OSS research
 
 → **Do not ask.** Fetch it, summarize, update PRD.
 
@@ -165,17 +172,17 @@ If answer is available via:
 
 Examples:
 
-* "Should I search?"
-* "Can you paste the code so I can proceed?"
-* "What does the code look like?" (when repo is available)
+- "Should I search?"
+- "Can you paste the code so I can proceed?"
+- "What does the code look like?" (when repo is available)
 
 → **Do not ask.** Take action.
 
 ### Gate C — What type of question is it?
 
-* **Blocking**: cannot proceed without user input
-* **Preference**: multiple valid choices, depends on product/UX/risk preference
-* **Derivable**: should be answered by inspection/research
+- **Blocking**: cannot proceed without user input
+- **Preference**: multiple valid choices, depends on product/UX/risk preference
+- **Derivable**: should be answered by inspection/research
 
 → Only ask **Blocking** or **Preference**.
 
@@ -185,9 +192,10 @@ Examples:
 
 ### Trigger conditions (any → research-first)
 
-* The task involves selecting an approach, library, protocol, framework, template system, plugin mechanism, or CLI UX convention
-* The user asks for "best practice", "how others do it", "recommendation"
-* The user can't reasonably enumerate options
+- The task involves selecting an approach, library, protocol, framework,
+  template system, plugin mechanism, or CLI UX convention
+- The user asks for "best practice", "how others do it", "recommendation"
+- The user can't reasonably enumerate options
 
 ### Research steps
 
@@ -205,65 +213,68 @@ Add a section in PRD (either within Technical Notes or as its own):
 
 ### What similar tools do
 
-* ...
-* ...
+- ...
+- ...
 
 ### Constraints from our repo/project
 
-* ...
+- ...
 
 ### Feasible approaches here
 
 **Approach A: <name>** (Recommended)
 
-* How it works:
-* Pros:
-* Cons:
+- How it works:
+- Pros:
+- Cons:
 
 **Approach B: <name>**
 
-* How it works:
-* Pros:
-* Cons:
+- How it works:
+- Pros:
+- Cons:
 
 **Approach C: <name>** (optional)
 
-* ...
+- ...
 ```
 
 Then ask **one** preference question:
 
-* "Which approach do you prefer: A / B / C (or other)?"
+- "Which approach do you prefer: A / B / C (or other)?"
 
 ---
 
 ## Step 5: Expansion Sweep (DIVERGE) — Required after initial understanding
 
-After you can summarize the goal, proactively broaden thinking before converging.
+After you can summarize the goal, proactively broaden thinking before
+converging.
 
 ### Expansion categories (keep to 1–2 bullets each)
 
 1. **Future evolution**
 
-   * What might this feature become in 1–3 months?
-   * What extension points are worth preserving now?
+   - What might this feature become in 1–3 months?
+   - What extension points are worth preserving now?
 
 2. **Related scenarios**
 
-   * What adjacent commands/flows should remain consistent with this?
-   * Are there parity expectations (create vs update, import vs export, etc.)?
+   - What adjacent commands/flows should remain consistent with this?
+   - Are there parity expectations (create vs update, import vs export, etc.)?
 
 3. **Failure & edge cases**
 
-   * Conflicts, offline/network failure, retries, idempotency, compatibility, rollback
-   * Input validation, security boundaries, permission checks
+   - Conflicts, offline/network failure, retries, idempotency, compatibility,
+     rollback
+   - Input validation, security boundaries, permission checks
 
 ### Expansion message template (to user)
 
 ```markdown
 I understand you want to implement: <current goal>.
 
-Before diving into design, let me quickly diverge to consider three categories (to avoid rework later):
+Before diving into design, let me quickly diverge to consider three categories
+(to avoid rework later):
 
 1. Future evolution: <1–2 bullets>
 2. Related scenarios: <1–2 bullets>
@@ -279,8 +290,8 @@ For this MVP, which would you like to include (or none)?
 
 Then update PRD:
 
-* What's in MVP → `Requirements`
-* What's excluded → `Out of Scope`
+- What's in MVP → `Requirements`
+- What's excluded → `Out of Scope`
 
 ---
 
@@ -288,14 +299,14 @@ Then update PRD:
 
 ### Rules
 
-* One question per message
-* Prefer multiple-choice when possible
-* After each user answer:
+- One question per message
+- Prefer multiple-choice when possible
+- After each user answer:
 
-  * Update PRD immediately
-  * Move answered items from `Open Questions` → `Requirements`
-  * Update `Acceptance Criteria` with testable checkboxes
-  * Clarify `Out of Scope`
+  - Update PRD immediately
+  - Move answered items from `Open Questions` → `Requirements`
+  - Update `Acceptance Criteria` with testable checkboxes
+  - Clarify `Out of Scope`
 
 ### Question priority (recommended)
 
@@ -319,22 +330,23 @@ For <topic>, which approach do you prefer?
 
 ## Step 7: Propose Approaches + Record Decisions (Complex tasks)
 
-After requirements are clear enough, propose 2–3 approaches (if not already done via research-first):
+After requirements are clear enough, propose 2–3 approaches (if not already done
+via research-first):
 
 ```markdown
 Based on current information, here are 2–3 feasible approaches:
 
 **Approach A: <name>** (Recommended)
 
-* How:
-* Pros:
-* Cons:
+- How:
+- Pros:
+- Cons:
 
 **Approach B: <name>**
 
-* How:
-* Pros:
-* Cons:
+- How:
+- Pros:
+- Cons:
 
 Which direction do you prefer?
 ```
@@ -344,16 +356,16 @@ Record the outcome in PRD as an ADR-lite section:
 ```markdown
 ## Decision (ADR-lite)
 
-**Context**: Why this decision was needed
-**Decision**: Which approach was chosen
-**Consequences**: Trade-offs, risks, potential future improvements
+**Context**: Why this decision was needed **Decision**: Which approach was
+chosen **Consequences**: Trade-offs, risks, potential future improvements
 ```
 
 ---
 
 ## Step 8: Final Confirmation + Implementation Plan
 
-When open questions are resolved, confirm complete requirements with a structured summary:
+When open questions are resolved, confirm complete requirements with a
+structured summary:
 
 ### Final confirmation format
 
@@ -364,30 +376,29 @@ Here's my understanding of the complete requirements:
 
 **Requirements**:
 
-* ...
-* ...
+- ...
+- ...
 
 **Acceptance Criteria**:
 
-* [ ] ...
-* [ ] ...
+- [ ] ...
+- [ ] ...
 
 **Definition of Done**:
 
-* ...
+- ...
 
 **Out of Scope**:
 
-* ...
+- ...
 
-**Technical Approach**:
-<brief summary + key decisions>
+**Technical Approach**: <brief summary + key decisions>
 
 **Implementation Plan (small PRs)**:
 
-* PR1: <scaffolding + tests + minimal plumbing>
-* PR2: <core behavior>
-* PR3: <edge cases + docs + cleanup>
+- PR1: <scaffolding + tests + minimal plumbing>
+- PR2: <core behavior>
+- PR3: <edge cases + docs + cleanup>
 
 Does this look correct? If yes, I'll proceed with implementation.
 ```
@@ -420,15 +431,15 @@ python3 ./.trellis/scripts/task.py add-subtask "$TASK_DIR" "$CHILD_DIR"
 
 ## Requirements
 
-* ...
+- ...
 
 ## Acceptance Criteria
 
-* [ ] ...
+- [ ] ...
 
 ## Definition of Done
 
-* ...
+- ...
 
 ## Technical Approach
 
@@ -440,7 +451,7 @@ Context / Decision / Consequences
 
 ## Out of Scope
 
-* ...
+- ...
 
 ## Technical Notes
 
@@ -451,17 +462,18 @@ Context / Decision / Consequences
 
 ## Anti-Patterns (Hard Avoid)
 
-* Asking user for code/context that can be derived from repo
-* Asking user to choose an approach before presenting concrete options
-* Meta questions about whether to research
-* Staying narrowly on the initial request without considering evolution/edges
-* Letting brainstorming drift without updating PRD
+- Asking user for code/context that can be derived from repo
+- Asking user to choose an approach before presenting concrete options
+- Meta questions about whether to research
+- Staying narrowly on the initial request without considering evolution/edges
+- Letting brainstorming drift without updating PRD
 
 ---
 
 ## Integration with Start Workflow
 
-After brainstorm completes (Step 8 confirmation approved), the flow continues to the Task Workflow's **Phase 2: Prepare for Implementation**:
+After brainstorm completes (Step 8 confirmation approved), the flow continues to
+the Task Workflow's **Phase 2: Prepare for Implementation**:
 
 ```text
 Brainstorm
@@ -479,14 +491,15 @@ Task Workflow Phase 3 (Execute)
   Implement → Check → Complete
 ```
 
-The task directory and PRD already exist from brainstorm, so Phase 1 of the Task Workflow is skipped entirely.
+The task directory and PRD already exist from brainstorm, so Phase 1 of the Task
+Workflow is skipped entirely.
 
 ---
 
 ## Related Commands
 
-| Command | When to Use |
-|---------|-------------|
-| `/start` | Entry point that triggers brainstorm |
-| `/finish-work` | After implementation is complete |
-| `/update-spec` | If new patterns emerge during work |
+| Command        | When to Use                          |
+| -------------- | ------------------------------------ |
+| `/start`       | Entry point that triggers brainstorm |
+| `/finish-work` | After implementation is complete     |
+| `/update-spec` | If new patterns emerge during work   |

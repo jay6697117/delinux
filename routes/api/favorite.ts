@@ -6,7 +6,10 @@ import { toggleFavorite } from "../../utils/posts.ts";
 export const handler = define.handlers({
   async POST(ctx) {
     if (!ctx.state.user) {
-      return new Response(null, { status: 302, headers: { location: "/auth/login" } });
+      return new Response(null, {
+        status: 302,
+        headers: { location: "/auth/login" },
+      });
     }
     const form = await ctx.req.formData();
     const postId = form.get("postId") as string;

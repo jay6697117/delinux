@@ -1,6 +1,5 @@
-// 版块数据定义与初始化
+// 版块数据定义（静态常量，无需数据库）
 
-import { getKv } from "./db.ts";
 import type { Board } from "./state.ts";
 
 // 预定义的版块列表
@@ -42,22 +41,6 @@ export const BOARDS: Board[] = [
   },
 ];
 
-// 初始化版块数据到 KV（并行检查，减少冷启动延迟）
-export async function initBoards(): Promise<void> {
-  const kv = await getKv();
-  // 并行检查所有版块是否存在
-  const existingEntries = await Promise.all(
-    BOARDS.map((board) => kv.get(["boards", board.slug], { consistency: "eventual" })),
-  );
-  // 只写入不存在的版块
-  const missing = BOARDS.filter((_, i) => !existingEntries[i].value);
-  if (missing.length > 0) {
-    await Promise.all(
-      missing.map((board) => kv.set(["boards", board.slug], board)),
-    );
-  }
-}
-
 // 预构建 slug → Board 只读映射，O(1) 查找替代 boards.find()
 const BOARD_BY_SLUG: ReadonlyMap<string, Board> = new Map(
   BOARDS.map((b) => [b.slug, b]),
@@ -68,14 +51,7 @@ export function getBoardBySlug(slug: string): Board | undefined {
   return BOARD_BY_SLUG.get(slug);
 }
 
-// 获取所有版块（直接返回静态常量，避免无意义的 KV 查询）
+// 获取所有版块
 export function getAllBoards(): Board[] {
   return BOARDS;
-}
-
-// 获取单个版块
-export async function getBoard(slug: string): Promise<Board | null> {
-  const kv = await getKv();
-  const entry = await kv.get<Board>(["boards", slug]);
-  return entry.value;
 }

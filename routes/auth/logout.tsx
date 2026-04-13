@@ -1,7 +1,11 @@
 // 登出
 
 import { define } from "../../utils.ts";
-import { deleteSession, clearSessionCookie, clearSessionCache } from "../../utils/auth.ts";
+import {
+  clearSessionCache,
+  clearSessionCookie,
+  deleteSession,
+} from "../../utils/auth.ts";
 
 export const handler = define.handlers({
   async GET(ctx) {
