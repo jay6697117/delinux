@@ -1,11 +1,13 @@
 // Turso (libSQL) 数据库连接与工具函数
 //
 // 策略：
-//   生产环境 (Deno Deploy) → import("@libsql/client") web 版，走 HTTP/WebSocket
-//   本地开发 → import("npm:@libsql/client/node") node 版，支持 file: URL 本地 SQLite
+//   生产环境 (Deno Deploy) → 静态 import @libsql/client (web 版)，走 HTTP/WebSocket
+//   本地开发 → 动态 import npm:@libsql/client/node，支持 file: URL 本地 SQLite
+//
+// 生产环境跳过建表（表已通过 initDb 或迁移脚本创建），减少冷启动耗时
 
-// 仅导入类型，不触发运行时加载原生模块
-import type { Client } from "@libsql/client";
+// 静态导入 web 版客户端用于生产环境（不含原生模块，Deno Deploy 兼容）
+import { type Client, createClient as createWebClient } from "@libsql/client";
 
 let _db: Client | null = null;
 
@@ -22,27 +24,36 @@ export function generateId(): string {
   return crypto.randomUUID().replace(/-/g, "").slice(0, 16);
 }
 
-// 初始化数据库（动态导入，避免在 Deno Deploy 上打包原生模块）
+// 初始化数据库
 export async function initDb(): Promise<void> {
   if (_db) return;
 
   const tursoUrl = Deno.env.get("TURSO_DATABASE_URL");
 
   if (tursoUrl) {
-    // 生产环境 / 配置了远程 URL：用 web 客户端（HTTP/WebSocket，无原生依赖）
-    const { createClient } = await import("@libsql/client");
-    _db = createClient({
+    // 生产环境：静态 import 的 web 客户端，零冷启动 import 开销
+    _db = createWebClient({
       url: tursoUrl,
       authToken: Deno.env.get("TURSO_AUTH_TOKEN"),
     });
-  } else {
-    // 本地开发：动态导入 node 客户端，支持 file: URL
-    const { createClient } = await import("npm:@libsql/client/node");
-    _db = createClient({ url: "file:./local.db" });
+    // 生产环境跳过建表（表已存在），只做轻量级 session 清理
+    await _db.execute({
+      sql: "DELETE FROM sessions WHERE expires_at < ?",
+      args: [Date.now()],
+    });
+    return;
   }
 
-  const db = _db;
+  // 本地开发：动态导入 node 客户端，支持 file: URL
+  const { createClient } = await import("npm:@libsql/client/node");
+  _db = createClient({ url: "file:./local.db" });
 
+  // 本地开发才需要建表（首次运行时自动创建）
+  await createTables(_db);
+}
+
+// 建表逻辑（仅本地开发 / 迁移脚本使用）
+export async function createTables(db: Client): Promise<void> {
   await db.batch([
     // 用户表
     `CREATE TABLE IF NOT EXISTS users (
@@ -112,7 +123,7 @@ export async function initDb(): Promise<void> {
     `CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at)`,
   ]);
 
-  // FTS5 全文搜索表（单独执行，因为含 VIRTUAL TABLE 语法）
+  // FTS5 全文搜索表
   await db.execute(`CREATE VIRTUAL TABLE IF NOT EXISTS posts_fts USING fts5(
     title, content, content=posts, content_rowid=rowid
   )`);
@@ -131,7 +142,7 @@ export async function initDb(): Promise<void> {
     END`,
   ]);
 
-  // 清理过期 Session（每次启动时清理一次）
+  // 清理过期 Session
   await db.execute({
     sql: "DELETE FROM sessions WHERE expires_at < ?",
     args: [Date.now()],
