@@ -18,7 +18,7 @@ export const handler = define.handlers({
     const cursor = url.searchParams.get("cursor") || undefined;
     const limit = 20;
     const kv = await getKv();
-    const entries = kv.list<string>({ prefix: ["posts_by_board", slug] }, { limit: limit + 1, cursor });
+    const entries = kv.list<string>({ prefix: ["posts_by_board", slug] }, { limit: limit + 1, cursor, consistency: "eventual" });
     const postIds: string[] = [];
     let nextCursor: string | undefined;
     let count = 0;

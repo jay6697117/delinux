@@ -49,6 +49,7 @@ export async function kvList<T>(
   const entries = kv.list<T>({ prefix }, {
     limit: limit + 1,
     cursor: options.cursor,
+    consistency: "eventual",
   });
 
   const items: T[] = [];

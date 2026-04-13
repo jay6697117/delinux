@@ -20,6 +20,7 @@ export const handler = define.handlers({
       const entries = kv.list<string>({ prefix: ["posts_latest"] }, {
         limit: limit + 1,
         cursor,
+        consistency: "eventual",
       });
 
       const postIds: string[] = [];

@@ -61,7 +61,7 @@ export async function createPost(
 // 获取帖子
 export async function getPost(id: string): Promise<Post | null> {
   const kv = await getKv();
-  const entry = await kv.get<Post>(["posts", id]);
+  const entry = await kv.get<Post>(["posts", id], { consistency: "eventual" });
   return entry.value;
 }
 
@@ -73,7 +73,7 @@ export async function getPostsByIds(
   if (ids.length === 0) return [];
   const kv = kvReader ?? await getKv();
   const entries = await Promise.all(
-    ids.map((id) => kv.get<Post>(["posts", id])),
+    ids.map((id) => kv.get<Post>(["posts", id], { consistency: "eventual" })),
   );
   return entries
     .filter((entry): entry is { value: Post } => entry.value !== null)
@@ -169,6 +169,7 @@ export async function getReplies(
   const entries = kv.list<Reply>({ prefix: ["replies", postId] }, {
     limit: limit + 1,
     cursor,
+    consistency: "eventual",
   });
 
   const items: Reply[] = [];
@@ -231,7 +232,7 @@ export async function isLiked(
   userId: string,
 ): Promise<boolean> {
   const kv = await getKv();
-  const entry = await kv.get(["likes", postId, userId]);
+  const entry = await kv.get(["likes", postId, userId], { consistency: "eventual" });
   return !!entry.value;
 }
 
@@ -265,7 +266,7 @@ export async function isFavorited(
   userId: string,
 ): Promise<boolean> {
   const kv = await getKv();
-  const entry = await kv.get(["favorites", userId, postId]);
+  const entry = await kv.get(["favorites", userId, postId], { consistency: "eventual" });
   return !!entry.value;
 }
 
@@ -279,6 +280,7 @@ export async function getUserFavorites(
   const entries = kv.list<boolean>({ prefix: ["favorites", userId] }, {
     limit: limit + 1,
     cursor,
+    consistency: "eventual",
   });
 
   const postIds: string[] = [];
@@ -370,7 +372,7 @@ export async function searchPosts(
       { title: string; boardSlug: string; createdAt: number }
     >(
       { prefix: ["search_words", word] },
-      { limit: 50 },
+      { limit: 50, consistency: "eventual" },
     );
 
     for await (const entry of entries) {

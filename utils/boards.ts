@@ -42,14 +42,19 @@ export const BOARDS: Board[] = [
   },
 ];
 
-// 初始化版块数据到 KV
+// 初始化版块数据到 KV（并行检查，减少冷启动延迟）
 export async function initBoards(): Promise<void> {
   const kv = await getKv();
-  for (const board of BOARDS) {
-    const existing = await kv.get(["boards", board.slug]);
-    if (!existing.value) {
-      await kv.set(["boards", board.slug], board);
-    }
+  // 并行检查所有版块是否存在
+  const existingEntries = await Promise.all(
+    BOARDS.map((board) => kv.get(["boards", board.slug], { consistency: "eventual" })),
+  );
+  // 只写入不存在的版块
+  const missing = BOARDS.filter((_, i) => !existingEntries[i].value);
+  if (missing.length > 0) {
+    await Promise.all(
+      missing.map((board) => kv.set(["boards", board.slug], board)),
+    );
   }
 }
 

@@ -109,7 +109,7 @@ export async function loginUser(
 // 获取用户（公开信息）
 export async function getUserById(id: string): Promise<UserPublic | null> {
   const kv = await getKv();
-  const entry = await kv.get<User>(["users", id]);
+  const entry = await kv.get<User>(["users", id], { consistency: "eventual" });
   if (!entry.value) return null;
 
   const { passwordHash: _, email: _e, ...pub } = entry.value;
@@ -119,7 +119,7 @@ export async function getUserById(id: string): Promise<UserPublic | null> {
 // 获取所有用户（管理员用）
 export async function getAllUsers(): Promise<User[]> {
   const kv = await getKv();
-  const entries = kv.list<User>({ prefix: ["users"] }, { limit: 500 });
+  const entries = kv.list<User>({ prefix: ["users"] }, { limit: 500, consistency: "eventual" });
   const users: User[] = [];
   for await (const entry of entries) {
     users.push(entry.value);
@@ -186,7 +186,7 @@ export async function createSession(userId: string): Promise<string> {
 // 获取 Session
 export async function getSession(sessionId: string): Promise<Session | null> {
   const kv = await getKv();
-  const entry = await kv.get<Session>(["sessions", sessionId]);
+  const entry = await kv.get<Session>(["sessions", sessionId], { consistency: "eventual" });
   if (!entry.value) return null;
 
   // 检查是否过期
