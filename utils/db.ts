@@ -1,24 +1,18 @@
 // Turso (libSQL) 数据库连接与工具函数
-// 使用 node 入口以支持本地 file: URL 和远程 libsql: URL
+//
+// 策略：
+//   生产环境 (Deno Deploy) → import("@libsql/client") web 版，走 HTTP/WebSocket
+//   本地开发 → import("npm:@libsql/client/node") node 版，支持 file: URL 本地 SQLite
 
-import { type Client, createClient } from "npm:@libsql/client/node";
+// 仅导入类型，不触发运行时加载原生模块
+import type { Client } from "@libsql/client";
 
 let _db: Client | null = null;
 
-// 获取 Turso 数据库实例（单例，全局复用）
+// 获取 Turso 数据库实例（必须先调用 initDb）
 export function getDb(): Client {
   if (!_db) {
-    const isDeploy = Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined;
-    if (isDeploy) {
-      // 生产环境：连接 Turso 云端数据库
-      _db = createClient({
-        url: Deno.env.get("TURSO_DATABASE_URL")!,
-        authToken: Deno.env.get("TURSO_AUTH_TOKEN"),
-      });
-    } else {
-      // 本地开发：使用文件型 SQLite
-      _db = createClient({ url: "file:./local.db" });
-    }
+    throw new Error("数据库未初始化，请先调用 initDb()");
   }
   return _db;
 }
@@ -28,9 +22,27 @@ export function generateId(): string {
   return crypto.randomUUID().replace(/-/g, "").slice(0, 16);
 }
 
-// 初始化数据库表（首次启动时自动建表）
+// 初始化数据库（动态导入，避免在 Deno Deploy 上打包原生模块）
 export async function initDb(): Promise<void> {
-  const db = getDb();
+  if (_db) return;
+
+  const tursoUrl = Deno.env.get("TURSO_DATABASE_URL");
+
+  if (tursoUrl) {
+    // 生产环境 / 配置了远程 URL：用 web 客户端（HTTP/WebSocket，无原生依赖）
+    const { createClient } = await import("@libsql/client");
+    _db = createClient({
+      url: tursoUrl,
+      authToken: Deno.env.get("TURSO_AUTH_TOKEN"),
+    });
+  } else {
+    // 本地开发：动态导入 node 客户端，支持 file: URL
+    const { createClient } = await import("npm:@libsql/client/node");
+    _db = createClient({ url: "file:./local.db" });
+  }
+
+  const db = _db;
+
   await db.batch([
     // 用户表
     `CREATE TABLE IF NOT EXISTS users (

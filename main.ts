@@ -5,13 +5,17 @@ import { initDb } from "./utils/db.ts";
 import { getCacheControl } from "./utils/cache.ts";
 
 export const app = new App<State>();
-let dbInitialized = false;
+let _initPromise: Promise<void> | null = null;
 
-function ensureDbInitialized(): void {
-  if (dbInitialized) return;
-
-  dbInitialized = true;
-  void initDb().catch((err) => console.error("数据库初始化失败:", err));
+// 确保数据库已初始化（只初始化一次，后续请求复用 Promise）
+function ensureDbInitialized(): Promise<void> {
+  if (!_initPromise) {
+    _initPromise = initDb().catch((err) => {
+      console.error("数据库初始化失败:", err);
+      _initPromise = null; // 失败后允许重试
+    });
+  }
+  return _initPromise;
 }
 
 // P2: 静态资源缓存（必须在 staticFiles 之前注册）
@@ -52,7 +56,7 @@ app.use(async (ctx) => {
     return ctx.next();
   }
 
-  ensureDbInitialized();
+  await ensureDbInitialized();
 
   // 使用带内存缓存的 getUserBySession，减少重复数据库查询
   try {
