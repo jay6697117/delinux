@@ -1,9 +1,8 @@
-// 全局布局：HTML 外壳、导航栏、页脚
+// 全局布局
 
-import type { PageProps } from "fresh";
-import type { State } from "../utils/state.ts";
+import { define } from "../utils.ts";
 
-export default function App({ Component, state, url }: PageProps<unknown, State>) {
+export default define.page(function App({ Component, state, url }) {
   const user = state?.user;
   const currentPath = url.pathname;
 
@@ -81,4 +80,4 @@ export default function App({ Component, state, url }: PageProps<unknown, State>
       </body>
     </html>
   );
-}
+});

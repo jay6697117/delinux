@@ -1,3 +1,6 @@
-import { defineConfig } from "fresh/runtime";
+import { defineConfig } from "vite";
+import { fresh } from "@fresh/plugin-vite";
 
-export default defineConfig({});
+export default defineConfig({
+  plugins: [fresh()],
+});

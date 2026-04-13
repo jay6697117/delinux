@@ -1,54 +1,51 @@
 // 首页：版块导航 + 全站最新帖子列表
 
-import type { RouteContext } from "fresh";
-import type { State, Post } from "../utils/state.ts";
+import { define } from "../utils.ts";
 import { getAllBoards } from "../utils/boards.ts";
 import { getKv } from "../utils/db.ts";
-import { getUserById } from "../utils/auth.ts";
 import { timeAgo } from "../utils/time.ts";
+import type { Post } from "../utils/state.ts";
 
-export default async function Home(req: Request, ctx: RouteContext<void, State>) {
-  const url = new URL(req.url);
-  const cursor = url.searchParams.get("cursor") || undefined;
-  const limit = 20;
+export const handler = define.handlers({
+  async GET(ctx) {
+    const url = new URL(ctx.req.url);
+    const cursor = url.searchParams.get("cursor") || undefined;
+    const limit = 20;
 
-  // 获取版块
-  const boards = await getAllBoards();
+    const boards = await getAllBoards();
+    const kv = await getKv();
+    const entries = kv.list<string>({ prefix: ["posts_latest"] }, {
+      limit: limit + 1,
+      cursor,
+    });
 
-  // 获取全站最新帖子
-  const kv = await getKv();
-  const entries = kv.list<string>({ prefix: ["posts_latest"] }, {
-    limit: limit + 1,
-    cursor,
-  });
+    const postIds: string[] = [];
+    let nextCursor: string | undefined;
+    let count = 0;
 
-  const postIds: string[] = [];
-  let nextCursor: string | undefined;
-  let count = 0;
-
-  for await (const entry of entries) {
-    count++;
-    if (count > limit) {
-      break;
+    for await (const entry of entries) {
+      count++;
+      if (count > limit) break;
+      postIds.push(entry.value as string);
+      nextCursor = entries.cursor;
     }
-    postIds.push(entry.value as string);
-    nextCursor = entries.cursor;
-  }
 
-  const hasMore = count > limit;
-
-  // 批量获取帖子数据
-  const posts: Post[] = [];
-  for (const id of postIds) {
-    const postEntry = await kv.get<Post>(["posts", id]);
-    if (postEntry.value) {
-      posts.push(postEntry.value);
+    const hasMore = count > limit;
+    const posts: Post[] = [];
+    for (const id of postIds) {
+      const postEntry = await kv.get<Post>(["posts", id]);
+      if (postEntry.value) posts.push(postEntry.value);
     }
-  }
+
+    return { data: { boards, posts, hasMore, nextCursor } };
+  },
+});
+
+export default define.page<typeof handler>(function Home({ data }) {
+  const { boards, posts, hasMore, nextCursor } = data;
 
   return (
     <div>
-      {/* 版块导航 */}
       <div class="board-grid">
         {boards.map((board) => (
           <a href={`/board/${board.slug}`} class="board-card" key={board.slug}>
@@ -61,7 +58,6 @@ export default async function Home(req: Request, ctx: RouteContext<void, State>)
         ))}
       </div>
 
-      {/* 帖子列表 */}
       <div class="card" style={{ marginTop: "var(--space-md)" }}>
         <div class="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span>📋 最新动态</span>
@@ -89,9 +85,7 @@ export default async function Home(req: Request, ctx: RouteContext<void, State>)
                     </span>
                     <span class="post-author">{post.authorName}</span>
                     <span class="post-time">{timeAgo(post.createdAt)}</span>
-                    <span class="post-stats">
-                      <span>👍 {post.likeCount}</span>
-                    </span>
+                    <span class="post-stats"><span>👍 {post.likeCount}</span></span>
                   </div>
                 </div>
               </li>
@@ -106,4 +100,4 @@ export default async function Home(req: Request, ctx: RouteContext<void, State>)
       </div>
     </div>
   );
-}
+});
