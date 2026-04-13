@@ -1,7 +1,11 @@
 // 帖子相关业务逻辑
 
-import { getKv, generateId, invertTimestamp } from "./db.ts";
+import { generateId, getKv, invertTimestamp } from "./db.ts";
 import type { Post, Reply } from "./state.ts";
+
+export interface PostKvReader {
+  get<T>(key: Deno.KvKey): Promise<{ value: T | null }>;
+}
 
 // ===== 帖子操作 =====
 
@@ -62,15 +66,18 @@ export async function getPost(id: string): Promise<Post | null> {
 }
 
 // 批量获取帖子（并行 kv.get，替代各页面重复手写的 Promise.all + kv.get 模式）
-export async function getPostsByIds(ids: string[]): Promise<Post[]> {
+export async function getPostsByIds(
+  ids: string[],
+  kvReader?: PostKvReader,
+): Promise<Post[]> {
   if (ids.length === 0) return [];
-  const kv = await getKv();
+  const kv = kvReader ?? await getKv();
   const entries = await Promise.all(
     ids.map((id) => kv.get<Post>(["posts", id])),
   );
   return entries
-    .filter((e) => e.value !== null)
-    .map((e) => e.value as Post);
+    .filter((entry): entry is { value: Post } => entry.value !== null)
+    .map((entry) => entry.value);
 }
 
 // 删除帖子（管理员）
@@ -86,7 +93,12 @@ export async function deletePost(id: string): Promise<boolean> {
   await kv.atomic()
     .delete(["posts", id])
     .delete(["posts_by_board", post.boardSlug, invertedCreated, id])
-    .delete(["posts_by_user", post.authorId, invertTimestamp(post.createdAt), id])
+    .delete([
+      "posts_by_user",
+      post.authorId,
+      invertTimestamp(post.createdAt),
+      id,
+    ])
     .delete(["posts_latest", invertedCreated, id])
     .commit();
 
@@ -132,7 +144,10 @@ export async function createReply(
 
   await kv.atomic()
     .set(["replies", postId, id], reply)
-    .set(["replies_by_user", authorId, invertTimestamp(now)], { postId, replyId: id })
+    .set(["replies_by_user", authorId, invertTimestamp(now)], {
+      postId,
+      replyId: id,
+    })
     .set(["posts", postId], updatedPost)
     // 更新索引：删除旧的，插入新的
     .delete(["posts_by_board", post.boardSlug, oldInvertedTime, postId])
@@ -176,7 +191,10 @@ export async function getReplies(
 
 // ===== 点赞操作 =====
 
-export async function toggleLike(postId: string, userId: string): Promise<boolean> {
+export async function toggleLike(
+  postId: string,
+  userId: string,
+): Promise<boolean> {
   const kv = await getKv();
   const likeKey: Deno.KvKey = ["likes", postId, userId];
   const existing = await kv.get(likeKey);
@@ -191,7 +209,10 @@ export async function toggleLike(postId: string, userId: string): Promise<boolea
     await kv.atomic()
       .delete(likeKey)
       .delete(["likes_by_user", userId, postId])
-      .set(["posts", postId], { ...post, likeCount: Math.max(0, post.likeCount - 1) })
+      .set(["posts", postId], {
+        ...post,
+        likeCount: Math.max(0, post.likeCount - 1),
+      })
       .commit();
     return false; // 返回当前是否已点赞
   } else {
@@ -205,7 +226,10 @@ export async function toggleLike(postId: string, userId: string): Promise<boolea
   }
 }
 
-export async function isLiked(postId: string, userId: string): Promise<boolean> {
+export async function isLiked(
+  postId: string,
+  userId: string,
+): Promise<boolean> {
   const kv = await getKv();
   const entry = await kv.get(["likes", postId, userId]);
   return !!entry.value;
@@ -213,7 +237,10 @@ export async function isLiked(postId: string, userId: string): Promise<boolean> 
 
 // ===== 收藏操作 =====
 
-export async function toggleFavorite(postId: string, userId: string): Promise<boolean> {
+export async function toggleFavorite(
+  postId: string,
+  userId: string,
+): Promise<boolean> {
   const kv = await getKv();
   const favKey: Deno.KvKey = ["favorites", userId, postId];
   const existing = await kv.get(favKey);
@@ -233,7 +260,10 @@ export async function toggleFavorite(postId: string, userId: string): Promise<bo
   }
 }
 
-export async function isFavorited(postId: string, userId: string): Promise<boolean> {
+export async function isFavorited(
+  postId: string,
+  userId: string,
+): Promise<boolean> {
   const kv = await getKv();
   const entry = await kv.get(["favorites", userId, postId]);
   return !!entry.value;
@@ -263,13 +293,7 @@ export async function getUserFavorites(
     nextCursor = entries.cursor;
   }
 
-  // 并行批量获取帖子详情（替代串行循环）
-  const postEntries = await Promise.all(
-    postIds.map((id) => kv.get<Post>(["posts", id])),
-  );
-  const posts = postEntries
-    .filter((e): e is { key: unknown[]; value: Post; versionstamp: string } => e.value !== null)
-    .map((e) => e.value);
+  const posts = await getPostsByIds(postIds);
 
   return {
     items: posts,
@@ -281,7 +305,12 @@ export async function getUserFavorites(
 // ===== 搜索索引 =====
 
 // 对标题和内容进行分词并建立索引
-async function indexPost(postId: string, title: string, boardSlug: string, createdAt: number): Promise<void> {
+async function indexPost(
+  postId: string,
+  title: string,
+  boardSlug: string,
+  createdAt: number,
+): Promise<void> {
   const kv = await getKv();
   const words = tokenize(title);
 
@@ -337,7 +366,9 @@ export async function searchPosts(
   const postScores = new Map<string, number>();
 
   for (const word of words) {
-    const entries = kv.list<{ title: string; boardSlug: string; createdAt: number }>(
+    const entries = kv.list<
+      { title: string; boardSlug: string; createdAt: number }
+    >(
       { prefix: ["search_words", word] },
       { limit: 50 },
     );
@@ -356,14 +387,5 @@ export async function searchPosts(
     .slice(0, limit)
     .map(([id]) => id);
 
-  // 并行批量获取帖子详情（替代串行循环）
-  const postEntries = await Promise.all(
-    sortedIds.map((id) => kv.get<Post>(["posts", id])),
-  );
-  const posts = postEntries
-    .filter((e): e is { key: unknown[]; value: Post; versionstamp: string } => e.value !== null)
-    .map((e) => e.value);
-
-  return posts;
+  return await getPostsByIds(sortedIds);
 }
-

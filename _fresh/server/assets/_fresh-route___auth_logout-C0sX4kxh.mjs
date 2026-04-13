@@ -1,4 +1,4 @@
-import { d as define, i as deleteSession, j as clearSessionCache, k as clearSessionCookie } from "../server-entry.mjs";
+import { d as define, j as deleteSession, k as clearSessionCache, m as clearSessionCookie } from "../server-entry.mjs";
 const handler$1 = define.handlers({
   async GET(ctx) {
     if (ctx.state.sessionId) {

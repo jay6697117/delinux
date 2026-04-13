@@ -1,4 +1,5 @@
-import { d as define, a, s, l, u, g as getKv } from "../server-entry.mjs";
+import { d as define, a, s, l, u, b as getKv } from "../server-entry.mjs";
+import { g as getPostsByIds } from "./posts-DP3b7mwx.mjs";
 import { t as timeAgo } from "./time-AqCAYVTU.mjs";
 const $$_tpl_1 = ["<div ", '><h1 class="page-title" ', '>🛡️ 管理后台</h1><div class="tabs">', "", "", "</div>", "", "", "</div>"];
 const $$_tpl_2 = ["<div ", '><div class="admin-stats"><div class="stat-card"><div class="stat-value">', '</div><div class="stat-label">注册用户</div></div><div class="stat-card"><div class="stat-value">', '</div><div class="stat-label">帖子总数</div></div><div class="stat-card"><div class="stat-value">', '</div><div class="stat-label">回复总数</div></div></div><div class="card" ', "><h3 ", ">⚠️ 高危操作：从云端炸毁整站数据</h3><p ", '>一键清空 Deno KV 数据库（包括云端部署和本地的所有用户、帖子和关联信息）。此操作不可逆！</p><form method="POST" action="/api/admin/clear-all" onsubmit="return confirm(&#39;警告：您即将强制清空线上线下的所有 Deno KV 数据库内容，且不可恢复！\\n（确定继续请点击“确定”）&#39;)"><button type="submit" class="btn btn-danger">🔥 确认清空全部数据</button></form></div></div>'];
@@ -24,7 +25,7 @@ const handler$1 = define.handlers({
     const kv = await getKv();
     let userCount = 0, postCount = 0, replyCount = 0;
     const users = [];
-    const posts = [];
+    let posts = [];
     const userEntries = kv.list({
       prefix: ["users"]
     }, {
@@ -39,14 +40,14 @@ const handler$1 = define.handlers({
     }, {
       limit: 200
     });
+    const postIds = [];
     for await (const entry of postEntries) {
       postCount++;
-      const pe = await kv.get(["posts", entry.value]);
-      if (pe.value) {
-        if (tab === "posts") posts.push(pe.value);
-        replyCount += pe.value.replyCount;
-      }
+      postIds.push(entry.value);
     }
+    const loadedPosts = await getPostsByIds(postIds);
+    replyCount = loadedPosts.reduce((sum, post) => sum + post.replyCount, 0);
+    if (tab === "posts") posts = loadedPosts;
     return {
       data: {
         tab,

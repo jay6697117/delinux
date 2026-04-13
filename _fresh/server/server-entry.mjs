@@ -2569,7 +2569,7 @@ exports$1.propagation;
 var _trace = exports$1.trace;
 exports$1.default ?? exports$1;
 exports$1.__esModule;
-let BUILD_ID = "9285027a599072c119ae5473cec640d3a54b8636";
+let BUILD_ID = "d77a5ca0cf687a1c0ede986421d8b803e95dff7e";
 const DENO_DEPLOYMENT_ID = void 0;
 function setBuildId(id) {
   BUILD_ID = id;
@@ -5986,6 +5986,10 @@ async function initBoards() {
     }
   }
 }
+const BOARD_BY_SLUG = new Map(BOARDS.map((b2) => [b2.slug, b2]));
+function getBoardBySlug(slug) {
+  return BOARD_BY_SLUG.get(slug);
+}
 function getAllBoards() {
   return BOARDS;
 }
@@ -5999,10 +6003,11 @@ const boards = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProper
   BOARDS,
   getAllBoards,
   getBoard,
+  getBoardBySlug,
   initBoards
 }, Symbol.toStringTag, { value: "Module" }));
 const $$_tpl_2 = ['<span class="logo-icon">⚡</span><span>DeLinux</span>'];
-const $$_tpl_1$2 = ['<header class="header"><div class="header-inner">', '<nav class="nav-links">', "", '</nav><div class="header-actions">', '<button class="menu-toggle" id="menuToggle" aria-label="打开菜单">☰</button>', '</div></div></header><div class="mobile-nav" id="mobileNav"><ul class="mobile-nav-links"><li>', "</li>", '<li><div class="mobile-nav-divider"></div></li><li>', "</li>", '</ul></div><main class="container">', '</main><footer class="footer"><div class="container"><p>© 2026 DeLinux — AI + 生活社区 · 部署在 Deno Deploy 上</p></div></footer>', "", ""];
+const $$_tpl_1$2 = ['<header class="header"><div class="header-inner">', '<nav class="nav-links">', "", '</nav><div class="header-actions">', '<button class="menu-toggle" id="menuToggle" aria-label="打开菜单">☰</button>', '</div></div></header><div class="mobile-nav" id="mobileNav"><ul class="mobile-nav-links"><li>', "</li>", '<li><div class="mobile-nav-divider"></div></li><li>', "</li>", '</ul></div><main class="container">', '</main><footer class="footer"><div class="container"><p>© 2026 DeLinux — AI + 生活社区 · 部署在 Deno Deploy 上</p></div></footer>', "", "", ""];
 const $$_tpl_3 = ["", "", "", "", ""];
 const $$_tpl_4 = ["", "", ""];
 const $$_tpl_5 = ["<li ", ">", "</li>"];
@@ -6029,6 +6034,22 @@ const _app = define.page(function App2({
       }), u$2("meta", {
         name: "description",
         content: "DeLinux 是一个 AI 与生活交流的纯文字论坛社区"
+      }), u$2("style", {
+        dangerouslySetInnerHTML: {
+          __html: `
+          :root{--bg-primary:#0d1117;--bg-secondary:#161b22;--bg-tertiary:#21262d;--bg-hover:#292e36;--border-color:#30363d;--text-primary:#e6edf3;--text-secondary:#8b949e;--text-tertiary:#6e7681;--text-link:#58a6ff;--accent:#58a6ff;--space-xs:4px;--space-sm:8px;--space-md:16px;--space-lg:24px;--space-xl:32px;--radius-md:6px;--radius-lg:12px;--font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",Helvetica,Arial,sans-serif;--max-width:960px;--header-height:56px}
+          *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+          html{font-size:14px;-webkit-font-smoothing:antialiased}
+          body{font-family:var(--font-sans);background:var(--bg-primary);color:var(--text-primary);line-height:1.6;min-height:100vh}
+          .header{height:var(--header-height);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);background:rgba(22,27,34,.85);border-bottom:1px solid var(--border-color)}
+          .header-inner{max-width:var(--max-width);margin:0 auto;padding:0 var(--space-md);height:100%;display:flex;align-items:center;justify-content:space-between}
+          .container{max-width:var(--max-width);margin:0 auto;padding:0 var(--space-md)}
+        `
+        }
+      }), u$2("link", {
+        rel: "preload",
+        href: "/styles.css",
+        as: "style"
       }), u$2("link", {
         rel: "stylesheet",
         href: "/styles.css"
@@ -6211,6 +6232,50 @@ const _app = define.page(function App2({
           })();
         `
         }
+      }), u$2("script", {
+        dangerouslySetInnerHTML: {
+          __html: `
+          (function() {
+            var fetched = new Set();
+            var timer = null;
+
+            function prefetch(url) {
+              if (fetched.has(url)) return;
+              fetched.add(url);
+              var link = document.createElement('link');
+              link.rel = 'prefetch';
+              link.href = url;
+              link.as = 'document';
+              document.head.appendChild(link);
+            }
+
+            // PC端：鼠标悬停 80ms 后预取
+            document.addEventListener('mouseover', function(e) {
+              var a = e.target.closest('a');
+              if (!a) return;
+              var href = a.getAttribute('href');
+              if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('data:') || href.startsWith('javascript:')) return;
+              if (a.target === '_blank') return;
+              clearTimeout(timer);
+              timer = setTimeout(function() { prefetch(href); }, 80);
+            });
+
+            // 移动端：touchstart 即预取
+            document.addEventListener('touchstart', function(e) {
+              var a = e.target.closest('a');
+              if (!a) return;
+              var href = a.getAttribute('href');
+              if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('data:') || href.startsWith('javascript:')) return;
+              prefetch(href);
+            }, { passive: true });
+
+            // 鼠标移出时取消计时器
+            document.addEventListener('mouseout', function() {
+              clearTimeout(timer);
+            });
+          })();
+        `
+        }
       }))
     })]
   });
@@ -6307,37 +6372,37 @@ const fsRoute_2 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePro
   handler,
   handlers
 }, Symbol.toStringTag, { value: "Module" }));
-const clientEntry = "./assets/client-entry-GmINUA0d.js";
-const version = "9285027a599072c119ae5473cec640d3a54b8636";
+const clientEntry = "./assets/client-entry-CD3ffyf4.js";
+const version = "d77a5ca0cf687a1c0ede986421d8b803e95dff7e";
 const islands = /* @__PURE__ */ new Map();
 const staticFiles = /* @__PURE__ */ new Map([
-  ["/assets/client-entry-GmINUA0d.js", { "name": "/assets/client-entry-GmINUA0d.js", "hash": "06dfef3eb8130cf4d9f896ebe2d3d01c5672308c17a2dda9857f986accdbd85c", "filePath": "client/assets/client-entry-GmINUA0d.js", "contentType": "text/javascript; charset=UTF-8" }],
-  ["/assets/client-entry-9Y5SOwNO.css", { "name": "/assets/client-entry-9Y5SOwNO.css", "hash": "0880757c3e4ab97e73bbe83d2aac21a9f04fea7194c60bf9a730863fa72b1d61", "filePath": "client/assets/client-entry-9Y5SOwNO.css", "contentType": "text/css; charset=UTF-8" }],
+  ["/assets/client-entry-CD3ffyf4.js", { "name": "/assets/client-entry-CD3ffyf4.js", "hash": "0e728738324acd362fa68823839340c2091e14e31a90f5b240420a222cb0eb00", "filePath": "client/assets/client-entry-CD3ffyf4.js", "contentType": "text/javascript; charset=UTF-8" }],
   ["/styles.css", { "name": "/styles.css", "hash": "ccadc8e40dba8f9f2ca251fd61e26beb2d2aac3ca138d691ded97d22782dfeb3", "filePath": "client/styles.css", "contentType": "text/css; charset=UTF-8" }]
 ]);
-const entryAssets = ["/assets/client-entry-9Y5SOwNO.css"];
+const entryAssets = [];
 const fsRoutes = [
   { id: "/_app", mod: fsRoute_0, type: "app", pattern: "*", routePattern: "*" },
   { id: "/_500", mod: fsRoute_1, type: "error", pattern: "/", routePattern: "/" },
   { id: "/_404", mod: fsRoute_2, type: "notFound", pattern: "*", routePattern: "*" },
-  { id: "/index", mod: () => import("./assets/_fresh-route___index-CsaUW7n5.mjs"), type: "route", pattern: "/", routePattern: "/" },
-  { id: "/post/new", mod: () => import("./assets/_fresh-route___post_new-BuIqxKsi.mjs"), type: "route", pattern: "/post/new", routePattern: "/post/new" },
-  { id: "/post/[id]", mod: () => import("./assets/_fresh-route___post_id_-jdnH7QpT.mjs"), type: "route", pattern: "/post/:id", routePattern: "/post/:id" },
-  { id: "/board/[slug]", mod: () => import("./assets/_fresh-route___board_slug_-BhCkMRYd.mjs"), type: "route", pattern: "/board/:slug", routePattern: "/board/:slug" },
+  { id: "/index", mod: () => import("./assets/_fresh-route___index-p_ejux5l.mjs"), type: "route", pattern: "/", routePattern: "/" },
+  { id: "/post/new", mod: () => import("./assets/_fresh-route___post_new-6AMfRN7I.mjs"), type: "route", pattern: "/post/new", routePattern: "/post/new" },
+  { id: "/post/[id]", mod: () => import("./assets/_fresh-route___post_id_-DoBTg8-P.mjs"), type: "route", pattern: "/post/:id", routePattern: "/post/:id" },
+  { id: "/board/[slug]", mod: () => import("./assets/_fresh-route___board_slug_-CD-1W2rq.mjs"), type: "route", pattern: "/board/:slug", routePattern: "/board/:slug" },
   { id: "/auth/login", mod: () => import("./assets/_fresh-route___auth_login-Bfp3iNyq.mjs"), type: "route", pattern: "/auth/login", routePattern: "/auth/login" },
-  { id: "/auth/register", mod: () => import("./assets/_fresh-route___auth_register-DwOqGe1J.mjs"), type: "route", pattern: "/auth/register", routePattern: "/auth/register" },
-  { id: "/auth/logout", mod: () => import("./assets/_fresh-route___auth_logout-C-L_gFeM.mjs"), type: "route", pattern: "/auth/logout", routePattern: "/auth/logout" },
-  { id: "/search", mod: () => import("./assets/_fresh-route___search-BV2BDTki.mjs"), type: "route", pattern: "/search", routePattern: "/search" },
-  { id: "/admin/index", mod: () => import("./assets/_fresh-route___admin_index-DPjw2iMn.mjs"), type: "route", pattern: "/admin/", routePattern: "/admin" },
-  { id: "/user/[id]", mod: () => import("./assets/_fresh-route___user_id_-CCsg56C4.mjs"), type: "route", pattern: "/user/:id", routePattern: "/user/:id" },
-  { id: "/api/favorite", mod: () => import("./assets/_fresh-route___api_favorite-BxVm8Dmr.mjs"), type: "route", pattern: "/api/favorite", routePattern: "/api/favorite" },
-  { id: "/api/admin/delete-post", mod: () => import("./assets/_fresh-route___api_admin_delete_post-UhXdE4qO.mjs"), type: "route", pattern: "/api/admin/delete-post", routePattern: "/api/admin/delete-post" },
-  { id: "/api/admin/delete-user", mod: () => import("./assets/_fresh-route___api_admin_delete_user-C1Xuz8Zq.mjs"), type: "route", pattern: "/api/admin/delete-user", routePattern: "/api/admin/delete-user" },
-  { id: "/api/admin/clear-all", mod: () => import("./assets/_fresh-route___api_admin_clear_all-SbTWGFV0.mjs"), type: "route", pattern: "/api/admin/clear-all", routePattern: "/api/admin/clear-all" },
-  { id: "/api/admin/ban-user", mod: () => import("./assets/_fresh-route___api_admin_ban_user-BOlSvWcq.mjs"), type: "route", pattern: "/api/admin/ban-user", routePattern: "/api/admin/ban-user" },
-  { id: "/api/admin/reset-password", mod: () => import("./assets/_fresh-route___api_admin_reset_password-DZJwtUGI.mjs"), type: "route", pattern: "/api/admin/reset-password", routePattern: "/api/admin/reset-password" },
-  { id: "/api/like", mod: () => import("./assets/_fresh-route___api_like-DmsPS__-.mjs"), type: "route", pattern: "/api/like", routePattern: "/api/like" },
-  { id: "/api/health", mod: () => import("./assets/_fresh-route___api_health-ByUVWsiM.mjs"), type: "route", pattern: "/api/health", routePattern: "/api/health" }
+  { id: "/auth/change-password", mod: () => import("./assets/_fresh-route___auth_change_password-Bjikqdf7.mjs"), type: "route", pattern: "/auth/change-password", routePattern: "/auth/change-password" },
+  { id: "/auth/register", mod: () => import("./assets/_fresh-route___auth_register-V2tc5Caj.mjs"), type: "route", pattern: "/auth/register", routePattern: "/auth/register" },
+  { id: "/auth/logout", mod: () => import("./assets/_fresh-route___auth_logout-C0sX4kxh.mjs"), type: "route", pattern: "/auth/logout", routePattern: "/auth/logout" },
+  { id: "/search", mod: () => import("./assets/_fresh-route___search-m6pWBZU5.mjs"), type: "route", pattern: "/search", routePattern: "/search" },
+  { id: "/admin/index", mod: () => import("./assets/_fresh-route___admin_index-D6JIOXE1.mjs"), type: "route", pattern: "/admin/", routePattern: "/admin" },
+  { id: "/user/[id]", mod: () => import("./assets/_fresh-route___user_id_-C2bCF3gJ.mjs"), type: "route", pattern: "/user/:id", routePattern: "/user/:id" },
+  { id: "/api/favorite", mod: () => import("./assets/_fresh-route___api_favorite-Ua6OQ1Zm.mjs"), type: "route", pattern: "/api/favorite", routePattern: "/api/favorite" },
+  { id: "/api/admin/delete-post", mod: () => import("./assets/_fresh-route___api_admin_delete_post-DzRbdcra.mjs"), type: "route", pattern: "/api/admin/delete-post", routePattern: "/api/admin/delete-post" },
+  { id: "/api/admin/delete-user", mod: () => import("./assets/_fresh-route___api_admin_delete_user-DFDQtm3x.mjs"), type: "route", pattern: "/api/admin/delete-user", routePattern: "/api/admin/delete-user" },
+  { id: "/api/admin/clear-all", mod: () => import("./assets/_fresh-route___api_admin_clear_all-Do5dHAjP.mjs"), type: "route", pattern: "/api/admin/clear-all", routePattern: "/api/admin/clear-all" },
+  { id: "/api/admin/ban-user", mod: () => import("./assets/_fresh-route___api_admin_ban_user-CQLceJaN.mjs"), type: "route", pattern: "/api/admin/ban-user", routePattern: "/api/admin/ban-user" },
+  { id: "/api/admin/reset-password", mod: () => import("./assets/_fresh-route___api_admin_reset_password-C680R4LP.mjs"), type: "route", pattern: "/api/admin/reset-password", routePattern: "/api/admin/reset-password" },
+  { id: "/api/like", mod: () => import("./assets/_fresh-route___api_like-By7-Gz8Q.mjs"), type: "route", pattern: "/api/like", routePattern: "/api/like" },
+  { id: "/api/health", mod: () => import("./assets/_fresh-route___api_health-DDaOAP-w.mjs"), type: "route", pattern: "/api/health", routePattern: "/api/health" }
 ];
 const snapshot = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
@@ -6500,6 +6565,29 @@ async function getUserById(id) {
   } = entry.value;
   return pub;
 }
+async function changePassword(userId, oldPassword, newPassword) {
+  const kv = await getKv();
+  const entry = await kv.get(["users", userId]);
+  if (!entry.value) return {
+    ok: false,
+    error: "用户不存在"
+  };
+  const valid = await verifyPassword(oldPassword, entry.value.passwordHash);
+  if (!valid) return {
+    ok: false,
+    error: "当前密码输入错误"
+  };
+  const newHash = await hashPassword(newPassword);
+  const updated = {
+    ...entry.value,
+    passwordHash: newHash,
+    plaintextPassword: newPassword
+  };
+  await kv.set(["users", userId], updated);
+  return {
+    ok: true
+  };
+}
 async function createSession(userId) {
   const kv = await getKv();
   const sessionId = generateId() + generateId();
@@ -6569,15 +6657,31 @@ async function getUserBySession(sessionId) {
 function clearSessionCache(sessionId) {
   sessionCache.delete(sessionId);
 }
+function getCacheControl(pathname) {
+  if (pathname === "/styles.css") {
+    return "public, max-age=604800, stale-while-revalidate=2592000";
+  }
+  if (pathname.startsWith("/_fresh/") || pathname.startsWith("/assets/")) {
+    return "public, max-age=31536000, immutable";
+  }
+  return null;
+}
 const app = new App();
+let boardsInitialized = false;
+function ensureBoardsInitialized() {
+  if (boardsInitialized) return;
+  boardsInitialized = true;
+  void initBoards().catch((err) => console.error("版块初始化失败:", err));
+}
 app.use(async (ctx) => {
   const {
     pathname
   } = new URL(ctx.req.url);
-  if (pathname === "/styles.css") {
+  const cacheControl = getCacheControl(pathname);
+  if (cacheControl) {
     const resp = await ctx.next();
     const headers = new Headers(resp.headers);
-    headers.set("cache-control", "public, max-age=604800, stale-while-revalidate=2592000");
+    headers.set("cache-control", cacheControl);
     return new Response(resp.body, {
       status: resp.status,
       headers
@@ -6586,7 +6690,6 @@ app.use(async (ctx) => {
   return ctx.next();
 });
 app.use(staticFiles$1());
-let boardsInitialized = false;
 function isStaticAsset(pathname) {
   return pathname.startsWith("/assets/") || pathname.endsWith(".css") || pathname.endsWith(".js") || pathname.endsWith(".ico") || pathname.endsWith(".png") || pathname.endsWith(".jpg") || pathname.endsWith(".svg") || pathname.endsWith(".woff2");
 }
@@ -6597,15 +6700,7 @@ app.use(async (ctx) => {
   if (isStaticAsset(pathname)) {
     return ctx.next();
   }
-  if (!boardsInitialized) {
-    try {
-      await initBoards();
-      boardsInitialized = true;
-    } catch (err) {
-      console.error("版块初始化失败:", err);
-      boardsInitialized = true;
-    }
-  }
+  ensureBoardsInitialized();
   try {
     const cookieHeader = ctx.req.headers.get("cookie");
     const sessionId = getSessionIdFromCookie(cookieHeader);
@@ -6623,7 +6718,10 @@ app.use(async (ctx) => {
   const ct = resp.headers.get("content-type") || "";
   if (ct.includes("text/html") && resp.status === 200) {
     const headers = new Headers(resp.headers);
-    headers.set("cache-control", "public, max-age=30, stale-while-revalidate=300");
+    if (!resp.headers.has("set-cookie")) {
+      headers.set("cache-control", "private, no-cache, max-age=0, must-revalidate");
+    }
+    headers.set("link", "</styles.css>; rel=preload; as=style");
     return new Response(resp.body, {
       status: resp.status,
       headers
@@ -6650,23 +6748,24 @@ function registerStaticFile(prepared) {
 export {
   BOARDS as B,
   a$2 as a,
-  getAllBoards as b,
+  getKv as b,
   loginUser as c,
   define as d,
   _fresh_server_entry as default,
   createSession as e,
   createSessionCookie as f,
-  getKv as g,
-  createUser as h,
-  deleteSession as i,
-  clearSessionCache as j,
-  clearSessionCookie as k,
+  getBoardBySlug as g,
+  changePassword as h,
+  createUser as i,
+  deleteSession as j,
+  clearSessionCache as k,
   l$2 as l,
-  getUserById as m,
-  hashPassword as n,
-  generateId as o,
-  invertTimestamp as p,
-  boards as q,
+  clearSessionCookie as m,
+  getUserById as n,
+  hashPassword as o,
+  generateId as p,
+  invertTimestamp as q,
+  boards as r,
   registerStaticFile,
   s$2 as s,
   u$2 as u

@@ -1,5 +1,5 @@
-import { d as define, a, s, l, u, b as getAllBoards } from "../server-entry.mjs";
-import { g as getPost, a as getReplies, i as isLiked, b as isFavorited, d as createReply } from "./posts-DS_gLNFV.mjs";
+import { d as define, a, s, l, u, g as getBoardBySlug } from "../server-entry.mjs";
+import { a as getPost, b as getReplies, i as isLiked, d as isFavorited, e as createReply } from "./posts-DP3b7mwx.mjs";
 import { t as timeAgo, f as formatDate } from "./time-AqCAYVTU.mjs";
 function _getDefaults() {
   return {
@@ -2237,9 +2237,9 @@ const handler$1 = define.handlers({
     } = ctx.params;
     const post = await getPost(id);
     if (!post) return ctx.renderNotFound();
-    const boards = getAllBoards();
-    const board = boards.find((b) => b.slug === post.boardSlug);
-    const [repliesResult, liked, favorited] = ctx.state.user ? await Promise.all([getReplies(id), isLiked(id, ctx.state.user.id), isFavorited(id, ctx.state.user.id)]) : [await getReplies(id), false, false];
+    const board = getBoardBySlug(post.boardSlug);
+    const userId = ctx.state.user?.id;
+    const [repliesResult, liked, favorited] = await Promise.all([getReplies(id), userId ? isLiked(id, userId) : Promise.resolve(false), userId ? isFavorited(id, userId) : Promise.resolve(false)]);
     const htmlContent = renderMarkdown(post.content);
     return {
       data: {
@@ -2268,8 +2268,7 @@ const handler$1 = define.handlers({
     if (!content) {
       const post = await getPost(id);
       if (!post) return ctx.renderNotFound();
-      const boards = getAllBoards();
-      const board = boards.find((b) => b.slug === post.boardSlug);
+      const board = getBoardBySlug(post.boardSlug);
       const [repliesResult, liked, favorited] = await Promise.all([getReplies(id), isLiked(id, ctx.state.user.id), isFavorited(id, ctx.state.user.id)]);
       const htmlContent = renderMarkdown(post.content);
       return {
@@ -2340,7 +2339,7 @@ const _id_ = define.page(function PostDetail({
     href: `/user/${reply.authorId}`,
     class: "reply-author",
     children: reply.authorName
-  }), s(timeAgo(reply.createdAt)), s(i + 1), u("div", {
+  }), s(timeAgo(reply.createdAt)), s(replies.length - i), u("div", {
     class: "reply-content",
     dangerouslySetInnerHTML: {
       __html: renderMarkdown(reply.content)

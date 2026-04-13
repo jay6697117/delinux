@@ -1,5 +1,5 @@
-import { d as define, a, s, l, u, b as getAllBoards } from "../server-entry.mjs";
-import { s as searchPosts } from "./posts-DS_gLNFV.mjs";
+import { d as define, a, s, l, u, g as getBoardBySlug } from "../server-entry.mjs";
+import { s as searchPosts } from "./posts-DP3b7mwx.mjs";
 import { t as timeAgo } from "./time-AqCAYVTU.mjs";
 const $$_tpl_1 = ["<div ", '><h1 class="page-title" ', '>🔍 搜索</h1><form method="GET" class="search-bar"><input class="form-input" type="text" name="q" ', ' placeholder="搜索帖子标题..." autofocus><button type="submit" class="btn btn-primary">搜索</button></form>', "</div>"];
 const $$_tpl_2 = ['<div class="card"><div class="card-header">搜索 &quot;', "&quot; 的结果 (", ")</div>", "</div>"];
@@ -10,12 +10,10 @@ const handler$1 = define.handlers({
   async GET(ctx) {
     const url = new URL(ctx.req.url);
     const query = url.searchParams.get("q") || "";
-    const boards = getAllBoards();
     const posts = query ? await searchPosts(query) : [];
     return {
       data: {
         query,
-        boards,
         posts
       }
     };
@@ -26,7 +24,6 @@ const search = define.page(function SearchPage({
 }) {
   const {
     query,
-    boards,
     posts
   } = data;
   return a($$_tpl_1, l("style", {
@@ -36,7 +33,7 @@ const search = define.page(function SearchPage({
   }), l("value", query), s(query && a($$_tpl_2, s(query), s(posts.length), s(posts.length === 0 ? a($$_tpl_3) : a($$_tpl_4, s(posts.map((post) => a($$_tpl_5, l("key", post.id), s(post.replyCount), u("a", {
     href: `/post/${post.id}`,
     children: post.title
-  }), s(boards.find((b) => b.slug === post.boardSlug)?.icon), s(boards.find((b) => b.slug === post.boardSlug)?.name), s(post.authorName), s(timeAgo(post.createdAt))))))))));
+  }), s(getBoardBySlug(post.boardSlug)?.icon), s(getBoardBySlug(post.boardSlug)?.name), s(post.authorName), s(timeAgo(post.createdAt))))))))));
 });
 const routeCss = null;
 const css = routeCss;

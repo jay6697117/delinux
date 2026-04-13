@@ -1,4 +1,4 @@
-import { g as getKv, o as generateId, p as invertTimestamp } from "../server-entry.mjs";
+import { b as getKv, p as generateId, q as invertTimestamp } from "../server-entry.mjs";
 async function createPost(title, content, authorId, authorName, boardSlug) {
   const kv = await getKv();
   const id = generateId();
@@ -33,6 +33,12 @@ async function getPost(id) {
   const kv = await getKv();
   const entry = await kv.get(["posts", id]);
   return entry.value;
+}
+async function getPostsByIds(ids, kvReader) {
+  if (ids.length === 0) return [];
+  const kv = await getKv();
+  const entries = await Promise.all(ids.map((id) => kv.get(["posts", id])));
+  return entries.filter((entry) => entry.value !== null).map((entry) => entry.value);
 }
 async function deletePost(id) {
   const kv = await getKv();
@@ -89,7 +95,7 @@ async function getReplies(postId, cursor, limit = 20) {
     nextCursor = entries.cursor;
   }
   return {
-    items,
+    items: items.reverse(),
     cursor: count > limit ? nextCursor : void 0,
     hasMore: count > limit
   };
@@ -145,19 +151,16 @@ async function getUserFavorites(userId, cursor, limit = 20) {
     limit: limit + 1,
     cursor
   });
-  const posts = [];
+  const postIds = [];
   let nextCursor;
   let count = 0;
   for await (const entry of entries) {
     count++;
     if (count > limit) break;
-    const postId = entry.key[2];
-    const postEntry = await kv.get(["posts", postId]);
-    if (postEntry.value) {
-      posts.push(postEntry.value);
-    }
+    postIds.push(entry.key[2]);
     nextCursor = entries.cursor;
   }
+  const posts = await getPostsByIds(postIds);
   return {
     items: posts,
     cursor: count > limit ? nextCursor : void 0,
@@ -217,23 +220,19 @@ async function searchPosts(query, limit = 30) {
   }
   if (postScores.size === 0) return [];
   const sortedIds = Array.from(postScores.entries()).sort((a, b) => b[1] - a[1]).slice(0, limit).map(([id]) => id);
-  const posts = [];
-  for (const postId of sortedIds) {
-    const postEntry = await kv.get(["posts", postId]);
-    if (postEntry.value) posts.push(postEntry.value);
-  }
-  return posts;
+  return await getPostsByIds(sortedIds);
 }
 export {
-  getReplies as a,
-  isFavorited as b,
+  getPost as a,
+  getReplies as b,
   createPost as c,
-  createReply as d,
-  getUserFavorites as e,
-  deletePost as f,
-  getPost as g,
-  toggleLike as h,
+  isFavorited as d,
+  createReply as e,
+  getUserFavorites as f,
+  getPostsByIds as g,
+  deletePost as h,
   isLiked as i,
+  toggleLike as j,
   searchPosts as s,
   toggleFavorite as t
 };

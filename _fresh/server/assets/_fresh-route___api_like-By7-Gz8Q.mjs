@@ -1,5 +1,5 @@
 import { d as define } from "../server-entry.mjs";
-import { h as toggleLike } from "./posts-DS_gLNFV.mjs";
+import { j as toggleLike } from "./posts-DP3b7mwx.mjs";
 const handler$1 = define.handlers({
   async POST(ctx) {
     if (!ctx.state.user) {

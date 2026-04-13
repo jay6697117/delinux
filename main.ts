@@ -1,47 +1,33 @@
 import { App, staticFiles } from "fresh";
-import { define, type State } from "./utils.ts";
-import {
-  getSessionIdFromCookie,
-  getUserBySession,
-} from "./utils/auth.ts";
+import { type State } from "./utils.ts";
+import { getSessionIdFromCookie, getUserBySession } from "./utils/auth.ts";
 import { initBoards } from "./utils/boards.ts";
+import { getCacheControl } from "./utils/cache.ts";
 
 export const app = new App<State>();
+let boardsInitialized = false;
+
+function ensureBoardsInitialized(): void {
+  if (boardsInitialized) return;
+
+  boardsInitialized = true;
+  void initBoards().catch((err) => console.error("版块初始化失败:", err));
+}
 
 // P2: 静态资源缓存（必须在 staticFiles 之前注册）
 app.use(async (ctx) => {
   const { pathname } = new URL(ctx.req.url);
-
-  // styles.css 缓存 7 天
-  if (pathname === "/styles.css") {
+  const cacheControl = getCacheControl(pathname);
+  if (cacheControl) {
     const resp = await ctx.next();
     const headers = new Headers(resp.headers);
-    headers.set(
-      "cache-control",
-      "public, max-age=604800, stale-while-revalidate=2592000",
-    );
+    headers.set("cache-control", cacheControl);
     return new Response(resp.body, { status: resp.status, headers });
   }
-
-  // /_fresh/ 和 /assets/ 下的 hashed 资源：永久缓存
-  // Vite 构建产物在 /assets/ 路径下，文件名包含 hash，内容变化后 URL 自动变化
-  if (pathname.startsWith("/_fresh/") || pathname.startsWith("/assets/")) {
-    const resp = await ctx.next();
-    const headers = new Headers(resp.headers);
-    headers.set(
-      "cache-control",
-      "public, max-age=31536000, immutable",
-    );
-    return new Response(resp.body, { status: resp.status, headers });
-  }
-
   return ctx.next();
 });
 
 app.use(staticFiles());
-
-// 版块初始化：模块加载时 fire-and-forget，不阻塞任何用户请求
-initBoards().catch((err) => console.error("版块初始化失败:", err));
 
 // 判断是否为静态资源请求（不需要 session 查询）
 function isStaticAsset(pathname: string): boolean {
@@ -65,6 +51,8 @@ app.use(async (ctx) => {
   if (isStaticAsset(pathname)) {
     return ctx.next();
   }
+
+  ensureBoardsInitialized();
 
   // P3: 使用带内存缓存的 getUserBySession，减少重复 KV 查询
   try {
@@ -91,7 +79,10 @@ app.use(async (ctx) => {
     // 如果响应包含 set-cookie（登录/登出等认证状态变化），不缓存页面
     // 避免浏览器缓存旧的认证状态 UI
     if (!resp.headers.has("set-cookie")) {
-      headers.set("cache-control", "private, no-cache, max-age=0, must-revalidate");
+      headers.set(
+        "cache-control",
+        "private, no-cache, max-age=0, must-revalidate",
+      );
     }
     // 通过 Link header 让浏览器尽早发现并加载 CSS（比解析 HTML 更快）
     headers.set("link", "</styles.css>; rel=preload; as=style");

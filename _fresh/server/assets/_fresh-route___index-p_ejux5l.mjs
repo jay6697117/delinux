@@ -1,4 +1,5 @@
-import { d as define, a, s, u, l, B as BOARDS, g as getKv } from "../server-entry.mjs";
+import { d as define, a, s, u, l, g as getBoardBySlug, B as BOARDS, b as getKv } from "../server-entry.mjs";
+import { g as getPostsByIds } from "./posts-DP3b7mwx.mjs";
 import { t as timeAgo } from "./time-AqCAYVTU.mjs";
 const $$_tpl_1 = ['<div><div class="board-grid">', '</div><div class="card" ', '><div class="card-header" ', "><span>📋 最新动态</span></div>", "", "</div></div>"];
 const $$_tpl_2 = ['<span class="board-icon">', '</span><div class="board-info"><h3>', "</h3><p>", "</p></div>"];
@@ -30,8 +31,7 @@ const handler$1 = define.handlers({
         nextCursor = entries.cursor;
       }
       const hasMore = count > limit;
-      const postEntries = await Promise.all(postIds.map((id) => kv.get(["posts", id])));
-      const posts = postEntries.filter((e) => e.value !== null).map((e) => e.value);
+      const posts = await getPostsByIds(postIds);
       return {
         data: {
           boards,
@@ -75,7 +75,7 @@ const index = define.page(function Home({
   }), s(posts.length === 0 ? a($$_tpl_3) : a($$_tpl_4, s(posts.map((post) => a($$_tpl_5, l("key", post.id), s(post.replyCount), u("a", {
     href: `/post/${post.id}`,
     children: post.title
-  }), s(boards.find((b) => b.slug === post.boardSlug)?.icon), s(boards.find((b) => b.slug === post.boardSlug)?.name), s(post.authorName), s(timeAgo(post.createdAt)), s(post.likeCount)))))), s(hasMore && nextCursor && a($$_tpl_6, u("a", {
+  }), s(getBoardBySlug(post.boardSlug)?.icon), s(getBoardBySlug(post.boardSlug)?.name), s(post.authorName), s(timeAgo(post.createdAt)), s(post.likeCount)))))), s(hasMore && nextCursor && a($$_tpl_6, u("a", {
     href: `/?cursor=${nextCursor}`,
     class: "btn btn-secondary",
     children: "加载更多"

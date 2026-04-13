@@ -1,6 +1,6 @@
 {
-  "_posts-DS_gLNFV.mjs": {
-    "file": "assets/posts-DS_gLNFV.mjs",
+  "_posts-DP3b7mwx.mjs": {
+    "file": "assets/posts-DP3b7mwx.mjs",
     "name": "posts",
     "imports": [
       "fresh:server_entry"
@@ -11,17 +11,18 @@
     "name": "time"
   },
   "fresh-route::_admin_index": {
-    "file": "assets/_fresh-route___admin_index-DPjw2iMn.mjs",
+    "file": "assets/_fresh-route___admin_index-D6JIOXE1.mjs",
     "name": "_fresh-route___admin_index",
     "src": "fresh-route::_admin_index",
     "isDynamicEntry": true,
     "imports": [
       "fresh:server_entry",
+      "_posts-DP3b7mwx.mjs",
       "_time-AqCAYVTU.mjs"
     ]
   },
   "fresh-route::_api_admin_ban_user": {
-    "file": "assets/_fresh-route___api_admin_ban_user-BOlSvWcq.mjs",
+    "file": "assets/_fresh-route___api_admin_ban_user-CQLceJaN.mjs",
     "name": "_fresh-route___api_admin_ban_user",
     "src": "fresh-route::_api_admin_ban_user",
     "isDynamicEntry": true,
@@ -30,7 +31,7 @@
     ]
   },
   "fresh-route::_api_admin_clear_all": {
-    "file": "assets/_fresh-route___api_admin_clear_all-SbTWGFV0.mjs",
+    "file": "assets/_fresh-route___api_admin_clear_all-Do5dHAjP.mjs",
     "name": "_fresh-route___api_admin_clear_all",
     "src": "fresh-route::_api_admin_clear_all",
     "isDynamicEntry": true,
@@ -39,17 +40,17 @@
     ]
   },
   "fresh-route::_api_admin_delete_post": {
-    "file": "assets/_fresh-route___api_admin_delete_post-UhXdE4qO.mjs",
+    "file": "assets/_fresh-route___api_admin_delete_post-DzRbdcra.mjs",
     "name": "_fresh-route___api_admin_delete_post",
     "src": "fresh-route::_api_admin_delete_post",
     "isDynamicEntry": true,
     "imports": [
       "fresh:server_entry",
-      "_posts-DS_gLNFV.mjs"
+      "_posts-DP3b7mwx.mjs"
     ]
   },
   "fresh-route::_api_admin_delete_user": {
-    "file": "assets/_fresh-route___api_admin_delete_user-C1Xuz8Zq.mjs",
+    "file": "assets/_fresh-route___api_admin_delete_user-DFDQtm3x.mjs",
     "name": "_fresh-route___api_admin_delete_user",
     "src": "fresh-route::_api_admin_delete_user",
     "isDynamicEntry": true,
@@ -58,7 +59,7 @@
     ]
   },
   "fresh-route::_api_admin_reset_password": {
-    "file": "assets/_fresh-route___api_admin_reset_password-DZJwtUGI.mjs",
+    "file": "assets/_fresh-route___api_admin_reset_password-C680R4LP.mjs",
     "name": "_fresh-route___api_admin_reset_password",
     "src": "fresh-route::_api_admin_reset_password",
     "isDynamicEntry": true,
@@ -67,17 +68,17 @@
     ]
   },
   "fresh-route::_api_favorite": {
-    "file": "assets/_fresh-route___api_favorite-BxVm8Dmr.mjs",
+    "file": "assets/_fresh-route___api_favorite-Ua6OQ1Zm.mjs",
     "name": "_fresh-route___api_favorite",
     "src": "fresh-route::_api_favorite",
     "isDynamicEntry": true,
     "imports": [
       "fresh:server_entry",
-      "_posts-DS_gLNFV.mjs"
+      "_posts-DP3b7mwx.mjs"
     ]
   },
   "fresh-route::_api_health": {
-    "file": "assets/_fresh-route___api_health-ByUVWsiM.mjs",
+    "file": "assets/_fresh-route___api_health-DDaOAP-w.mjs",
     "name": "_fresh-route___api_health",
     "src": "fresh-route::_api_health",
     "isDynamicEntry": true,
@@ -89,13 +90,22 @@
     ]
   },
   "fresh-route::_api_like": {
-    "file": "assets/_fresh-route___api_like-DmsPS__-.mjs",
+    "file": "assets/_fresh-route___api_like-By7-Gz8Q.mjs",
     "name": "_fresh-route___api_like",
     "src": "fresh-route::_api_like",
     "isDynamicEntry": true,
     "imports": [
       "fresh:server_entry",
-      "_posts-DS_gLNFV.mjs"
+      "_posts-DP3b7mwx.mjs"
+    ]
+  },
+  "fresh-route::_auth_change_password": {
+    "file": "assets/_fresh-route___auth_change_password-Bjikqdf7.mjs",
+    "name": "_fresh-route___auth_change_password",
+    "src": "fresh-route::_auth_change_password",
+    "isDynamicEntry": true,
+    "imports": [
+      "fresh:server_entry"
     ]
   },
   "fresh-route::_auth_login": {
@@ -108,7 +118,7 @@
     ]
   },
   "fresh-route::_auth_logout": {
-    "file": "assets/_fresh-route___auth_logout-C-L_gFeM.mjs",
+    "file": "assets/_fresh-route___auth_logout-C0sX4kxh.mjs",
     "name": "_fresh-route___auth_logout",
     "src": "fresh-route::_auth_logout",
     "isDynamicEntry": true,
@@ -117,7 +127,7 @@
     ]
   },
   "fresh-route::_auth_register": {
-    "file": "assets/_fresh-route___auth_register-DwOqGe1J.mjs",
+    "file": "assets/_fresh-route___auth_register-V2tc5Caj.mjs",
     "name": "_fresh-route___auth_register",
     "src": "fresh-route::_auth_register",
     "isDynamicEntry": true,
@@ -126,65 +136,67 @@
     ]
   },
   "fresh-route::_board_slug_": {
-    "file": "assets/_fresh-route___board_slug_-BhCkMRYd.mjs",
+    "file": "assets/_fresh-route___board_slug_-CD-1W2rq.mjs",
     "name": "_fresh-route___board_slug_",
     "src": "fresh-route::_board_slug_",
     "isDynamicEntry": true,
     "imports": [
       "fresh:server_entry",
+      "_posts-DP3b7mwx.mjs",
       "_time-AqCAYVTU.mjs"
     ]
   },
   "fresh-route::_index": {
-    "file": "assets/_fresh-route___index-CsaUW7n5.mjs",
+    "file": "assets/_fresh-route___index-p_ejux5l.mjs",
     "name": "_fresh-route___index",
     "src": "fresh-route::_index",
     "isDynamicEntry": true,
     "imports": [
       "fresh:server_entry",
+      "_posts-DP3b7mwx.mjs",
       "_time-AqCAYVTU.mjs"
     ]
   },
   "fresh-route::_post_id_": {
-    "file": "assets/_fresh-route___post_id_-jdnH7QpT.mjs",
+    "file": "assets/_fresh-route___post_id_-DoBTg8-P.mjs",
     "name": "_fresh-route___post_id_",
     "src": "fresh-route::_post_id_",
     "isDynamicEntry": true,
     "imports": [
       "fresh:server_entry",
-      "_posts-DS_gLNFV.mjs",
+      "_posts-DP3b7mwx.mjs",
       "_time-AqCAYVTU.mjs"
     ]
   },
   "fresh-route::_post_new": {
-    "file": "assets/_fresh-route___post_new-BuIqxKsi.mjs",
+    "file": "assets/_fresh-route___post_new-6AMfRN7I.mjs",
     "name": "_fresh-route___post_new",
     "src": "fresh-route::_post_new",
     "isDynamicEntry": true,
     "imports": [
       "fresh:server_entry",
-      "_posts-DS_gLNFV.mjs"
+      "_posts-DP3b7mwx.mjs"
     ]
   },
   "fresh-route::_search": {
-    "file": "assets/_fresh-route___search-BV2BDTki.mjs",
+    "file": "assets/_fresh-route___search-m6pWBZU5.mjs",
     "name": "_fresh-route___search",
     "src": "fresh-route::_search",
     "isDynamicEntry": true,
     "imports": [
       "fresh:server_entry",
-      "_posts-DS_gLNFV.mjs",
+      "_posts-DP3b7mwx.mjs",
       "_time-AqCAYVTU.mjs"
     ]
   },
   "fresh-route::_user_id_": {
-    "file": "assets/_fresh-route___user_id_-CCsg56C4.mjs",
+    "file": "assets/_fresh-route___user_id_-C2bCF3gJ.mjs",
     "name": "_fresh-route___user_id_",
     "src": "fresh-route::_user_id_",
     "isDynamicEntry": true,
     "imports": [
       "fresh:server_entry",
-      "_posts-DS_gLNFV.mjs",
+      "_posts-DP3b7mwx.mjs",
       "_time-AqCAYVTU.mjs"
     ]
   },
@@ -200,6 +212,7 @@
       "fresh-route::_post_id_",
       "fresh-route::_board_slug_",
       "fresh-route::_auth_login",
+      "fresh-route::_auth_change_password",
       "fresh-route::_auth_register",
       "fresh-route::_auth_logout",
       "fresh-route::_search",
