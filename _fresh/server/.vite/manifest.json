@@ -1,6 +1,6 @@
 {
-  "_posts-DP3b7mwx.mjs": {
-    "file": "assets/posts-DP3b7mwx.mjs",
+  "_posts-CchskeWA.mjs": {
+    "file": "assets/posts-CchskeWA.mjs",
     "name": "posts",
     "imports": [
       "fresh:server_entry"
@@ -11,13 +11,13 @@
     "name": "time"
   },
   "fresh-route::_admin_index": {
-    "file": "assets/_fresh-route___admin_index-D6JIOXE1.mjs",
+    "file": "assets/_fresh-route___admin_index-CSUIxWQS.mjs",
     "name": "_fresh-route___admin_index",
     "src": "fresh-route::_admin_index",
     "isDynamicEntry": true,
     "imports": [
       "fresh:server_entry",
-      "_posts-DP3b7mwx.mjs",
+      "_posts-CchskeWA.mjs",
       "_time-AqCAYVTU.mjs"
     ]
   },
@@ -40,13 +40,13 @@
     ]
   },
   "fresh-route::_api_admin_delete_post": {
-    "file": "assets/_fresh-route___api_admin_delete_post-DzRbdcra.mjs",
+    "file": "assets/_fresh-route___api_admin_delete_post-s6-9-lfI.mjs",
     "name": "_fresh-route___api_admin_delete_post",
     "src": "fresh-route::_api_admin_delete_post",
     "isDynamicEntry": true,
     "imports": [
       "fresh:server_entry",
-      "_posts-DP3b7mwx.mjs"
+      "_posts-CchskeWA.mjs"
     ]
   },
   "fresh-route::_api_admin_delete_user": {
@@ -68,13 +68,13 @@
     ]
   },
   "fresh-route::_api_favorite": {
-    "file": "assets/_fresh-route___api_favorite-Ua6OQ1Zm.mjs",
+    "file": "assets/_fresh-route___api_favorite-NeIuFuUE.mjs",
     "name": "_fresh-route___api_favorite",
     "src": "fresh-route::_api_favorite",
     "isDynamicEntry": true,
     "imports": [
       "fresh:server_entry",
-      "_posts-DP3b7mwx.mjs"
+      "_posts-CchskeWA.mjs"
     ]
   },
   "fresh-route::_api_health": {
@@ -90,13 +90,13 @@
     ]
   },
   "fresh-route::_api_like": {
-    "file": "assets/_fresh-route___api_like-By7-Gz8Q.mjs",
+    "file": "assets/_fresh-route___api_like-Dg3BdKvf.mjs",
     "name": "_fresh-route___api_like",
     "src": "fresh-route::_api_like",
     "isDynamicEntry": true,
     "imports": [
       "fresh:server_entry",
-      "_posts-DP3b7mwx.mjs"
+      "_posts-CchskeWA.mjs"
     ]
   },
   "fresh-route::_auth_change_password": {
@@ -136,67 +136,67 @@
     ]
   },
   "fresh-route::_board_slug_": {
-    "file": "assets/_fresh-route___board_slug_-CD-1W2rq.mjs",
+    "file": "assets/_fresh-route___board_slug_-Cxf_Axi0.mjs",
     "name": "_fresh-route___board_slug_",
     "src": "fresh-route::_board_slug_",
     "isDynamicEntry": true,
     "imports": [
       "fresh:server_entry",
-      "_posts-DP3b7mwx.mjs",
+      "_posts-CchskeWA.mjs",
       "_time-AqCAYVTU.mjs"
     ]
   },
   "fresh-route::_index": {
-    "file": "assets/_fresh-route___index-p_ejux5l.mjs",
+    "file": "assets/_fresh-route___index-BBBhr_Ch.mjs",
     "name": "_fresh-route___index",
     "src": "fresh-route::_index",
     "isDynamicEntry": true,
     "imports": [
       "fresh:server_entry",
-      "_posts-DP3b7mwx.mjs",
+      "_posts-CchskeWA.mjs",
       "_time-AqCAYVTU.mjs"
     ]
   },
   "fresh-route::_post_id_": {
-    "file": "assets/_fresh-route___post_id_-DoBTg8-P.mjs",
+    "file": "assets/_fresh-route___post_id_-9xMu-Kr7.mjs",
     "name": "_fresh-route___post_id_",
     "src": "fresh-route::_post_id_",
     "isDynamicEntry": true,
     "imports": [
       "fresh:server_entry",
-      "_posts-DP3b7mwx.mjs",
+      "_posts-CchskeWA.mjs",
       "_time-AqCAYVTU.mjs"
     ]
   },
   "fresh-route::_post_new": {
-    "file": "assets/_fresh-route___post_new-6AMfRN7I.mjs",
+    "file": "assets/_fresh-route___post_new-DCKrtpc8.mjs",
     "name": "_fresh-route___post_new",
     "src": "fresh-route::_post_new",
     "isDynamicEntry": true,
     "imports": [
       "fresh:server_entry",
-      "_posts-DP3b7mwx.mjs"
+      "_posts-CchskeWA.mjs"
     ]
   },
   "fresh-route::_search": {
-    "file": "assets/_fresh-route___search-m6pWBZU5.mjs",
+    "file": "assets/_fresh-route___search-C1sjmymN.mjs",
     "name": "_fresh-route___search",
     "src": "fresh-route::_search",
     "isDynamicEntry": true,
     "imports": [
       "fresh:server_entry",
-      "_posts-DP3b7mwx.mjs",
+      "_posts-CchskeWA.mjs",
       "_time-AqCAYVTU.mjs"
     ]
   },
   "fresh-route::_user_id_": {
-    "file": "assets/_fresh-route___user_id_-C2bCF3gJ.mjs",
+    "file": "assets/_fresh-route___user_id_-BSOTC9w5.mjs",
     "name": "_fresh-route___user_id_",
     "src": "fresh-route::_user_id_",
     "isDynamicEntry": true,
     "imports": [
       "fresh:server_entry",
-      "_posts-DP3b7mwx.mjs",
+      "_posts-CchskeWA.mjs",
       "_time-AqCAYVTU.mjs"
     ]
   },

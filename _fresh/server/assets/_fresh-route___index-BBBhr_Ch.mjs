@@ -1,5 +1,5 @@
 import { d as define, a, s, u, l, g as getBoardBySlug, B as BOARDS, b as getKv } from "../server-entry.mjs";
-import { g as getPostsByIds } from "./posts-DP3b7mwx.mjs";
+import { g as getPostsByIds } from "./posts-CchskeWA.mjs";
 import { t as timeAgo } from "./time-AqCAYVTU.mjs";
 const $$_tpl_1 = ['<div><div class="board-grid">', '</div><div class="card" ', '><div class="card-header" ', "><span>📋 最新动态</span></div>", "", "</div></div>"];
 const $$_tpl_2 = ['<span class="board-icon">', '</span><div class="board-info"><h3>', "</h3><p>", "</p></div>"];
@@ -19,7 +19,8 @@ const handler$1 = define.handlers({
         prefix: ["posts_latest"]
       }, {
         limit: limit + 1,
-        cursor
+        cursor,
+        consistency: "eventual"
       });
       const postIds = [];
       let nextCursor;

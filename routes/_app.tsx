@@ -2,6 +2,7 @@
 
 import { define } from "../utils.ts";
 import { BOARDS } from "../utils/boards.ts";
+import { Partial } from "fresh/runtime";
 
 export default define.page(function App({ Component, state, url }) {
   const user = state?.user;
@@ -28,7 +29,7 @@ export default define.page(function App({ Component, state, url }) {
         <link rel="stylesheet" href="/styles.css" />
         <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
       </head>
-      <body>
+      <body f-client-nav>
         {/* 导航栏 */}
         <header class="header">
           <div class="header-inner">
@@ -148,9 +149,11 @@ export default define.page(function App({ Component, state, url }) {
           </ul>
         </div>
 
-        {/* 页面内容 */}
+        {/* 页面内容（Partial 区域：切换板块时只替换此区域，无需全页面刷新） */}
         <main class="container">
-          <Component />
+          <Partial name="body">
+            <Component />
+          </Partial>
         </main>
 
         {/* 页脚 */}
@@ -181,7 +184,7 @@ export default define.page(function App({ Component, state, url }) {
           })();
         `}} />
 
-        {/* 页面跳转进度条 */}
+        {/* 页面跳转进度条（兼容 Partial 客户端导航 + 传统全页面刷新） */}
         <script dangerouslySetInnerHTML={{ __html: `
           (function() {
             // 创建进度条 DOM
@@ -208,7 +211,6 @@ export default define.page(function App({ Component, state, url }) {
               progress = 0;
               bar.style.opacity = '1';
               bar.style.width = '0';
-              // 用 requestAnimationFrame 平滑递增
               function tick() {
                 if (progress < 30) progress += 3;
                 else if (progress < 60) progress += 1.5;
@@ -228,73 +230,30 @@ export default define.page(function App({ Component, state, url }) {
               }, 200);
             }
 
-            // 监听所有内部链接点击
-            document.addEventListener('click', function(e) {
-              var a = e.target.closest('a');
-              if (!a) return;
-              var href = a.getAttribute('href');
-              if (!href) return;
-              // 跳过外链、锚点、新窗口、特殊协议
-              if (href.startsWith('http') || href.startsWith('#') || href.startsWith('data:') || href.startsWith('javascript:')) return;
-              if (a.target === '_blank') return;
-              start();
-            });
+            // 拦截 fetch 以监听 Partial 导航请求
+            var _fetch = window.fetch;
+            window.fetch = function() {
+              var url = arguments[0];
+              if (typeof url === 'string' && url.includes('fresh-partial=true')) {
+                start();
+                return _fetch.apply(this, arguments).then(function(resp) {
+                  done();
+                  return resp;
+                }).catch(function(err) {
+                  done();
+                  throw err;
+                });
+              }
+              return _fetch.apply(this, arguments);
+            };
 
-            // 表单提交也显示进度条
-            document.addEventListener('submit', function() { start(); });
-
-            // 页面卸载前加速到 90%
+            // 传统全页面刷新的降级处理
             window.addEventListener('beforeunload', function() {
               if (rafId) cancelAnimationFrame(rafId);
               progress = 90;
               bar.style.width = '90%';
             });
-
-            // 页面完全加载后完成
             window.addEventListener('pageshow', function() { done(); });
-          })();
-        `}} />
-
-        {/* 链接悬停预取：实现近乎 SPA 的页面切换速度 */}
-        <script dangerouslySetInnerHTML={{ __html: `
-          (function() {
-            var fetched = new Set();
-            var timer = null;
-
-            function prefetch(url) {
-              if (fetched.has(url)) return;
-              fetched.add(url);
-              var link = document.createElement('link');
-              link.rel = 'prefetch';
-              link.href = url;
-              link.as = 'document';
-              document.head.appendChild(link);
-            }
-
-            // PC端：鼠标悬停 80ms 后预取
-            document.addEventListener('mouseover', function(e) {
-              var a = e.target.closest('a');
-              if (!a) return;
-              var href = a.getAttribute('href');
-              if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('data:') || href.startsWith('javascript:')) return;
-              if (a.target === '_blank') return;
-              clearTimeout(timer);
-              timer = setTimeout(function() { prefetch(href); }, 80);
-            });
-
-            // 移动端：touchstart 即预取
-            document.addEventListener('touchstart', function(e) {
-              var a = e.target.closest('a');
-              if (!a) return;
-              var href = a.getAttribute('href');
-              if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('data:') || href.startsWith('javascript:')) return;
-              prefetch(href);
-            }, { passive: true });
-
-            // 鼠标移出时取消计时器
-            document.addEventListener('mouseout', function() {
-              clearTimeout(timer);
-            });
           })();
         `}} />
       </body>

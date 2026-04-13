@@ -1,5 +1,5 @@
 import { d as define, a, s, l, u, g as getBoardBySlug, n as getUserById, b as getKv } from "../server-entry.mjs";
-import { g as getPostsByIds, f as getUserFavorites } from "./posts-DP3b7mwx.mjs";
+import { g as getPostsByIds, f as getUserFavorites } from "./posts-CchskeWA.mjs";
 import { t as timeAgo } from "./time-AqCAYVTU.mjs";
 const $$_tpl_1 = ["<div ", '><div class="card"><div class="user-header"><div class="user-avatar">', '</div><div class="user-info"><h1>', "", "", "</h1><p>加入于 ", "</p></div>", '</div></div><div class="tabs" ', ">", "", '</div><div class="card">', "</div></div>"];
 const $$_tpl_2 = ['<span class="user-badge admin" ', ">管理员</span>"];

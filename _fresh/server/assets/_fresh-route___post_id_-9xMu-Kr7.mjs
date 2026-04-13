@@ -1,5 +1,5 @@
-import { d as define, a, s, l, u, g as getBoardBySlug } from "../server-entry.mjs";
-import { a as getPost, b as getReplies, i as isLiked, d as isFavorited, e as createReply } from "./posts-DP3b7mwx.mjs";
+import { d as define, a, u, s, l, g as getBoardBySlug } from "../server-entry.mjs";
+import { a as getPost, b as getReplies, i as isLiked, d as isFavorited, e as createReply } from "./posts-CchskeWA.mjs";
 import { t as timeAgo, f as formatDate } from "./time-AqCAYVTU.mjs";
 function _getDefaults() {
   return {
@@ -2222,7 +2222,7 @@ function renderMarkdown(text) {
   const html2 = marked.parse(text);
   return sanitizeHtml(html2);
 }
-const $$_tpl_1 = ["<div ", '><div class="card"><div class="post-detail"><div ', ">", '</div><h1 class="post-detail-title">', '</h1><div class="post-detail-meta">', "<span>发布于 ", "</span><span>👍 ", "</span><span>💬 ", "</span></div>", "</div>", '</div><div class="card" ', '><div class="card-header">💬 回复 (', ")</div>", "</div>", "</div>"];
+const $$_tpl_1 = ["<div ", '><div class="card"><div class="post-detail"><div class="post-detail-topbar">', "", '</div><h1 class="post-detail-title">', '</h1><div class="post-detail-meta">', "<span>发布于 ", "</span><span>👍 ", "</span><span>💬 ", "</span></div>", "</div>", '</div><div class="card" ', '><div class="card-header">💬 回复 (', ")</div>", "</div>", "", "</div>"];
 const $$_tpl_2 = ['<div class="action-bar"><form method="POST" action="/api/like" ', '><input type="hidden" name="postId" ', '><button type="submit" ', ">", " ", '</button></form><form method="POST" action="/api/favorite" ', '><input type="hidden" name="postId" ', '><button type="submit" ', ">", "</button></form>", "</div>"];
 const $$_tpl_3 = ['<form method="POST" action="/api/admin/delete-post" ', '><input type="hidden" name="postId" ', '><button type="submit" class="action-btn" ', ">🗑️ 删帖</button></form>"];
 const $$_tpl_4 = ['<div class="empty-state" ', '><p class="empty-state-text">还没有回复，来说两句吧</p></div>'];
@@ -2307,8 +2307,11 @@ const _id_ = define.page(function PostDetail({
   } = data;
   return a($$_tpl_1, l("style", {
     padding: "var(--space-md) 0"
-  }), l("style", {
-    marginBottom: "var(--space-sm)"
+  }), u("a", {
+    href: `/board/${post.boardSlug}`,
+    class: "back-btn",
+    id: "back-btn",
+    children: "← 返回"
   }), u("a", {
     href: `/board/${post.boardSlug}`,
     class: "post-board-tag",
@@ -2357,7 +2360,18 @@ const _id_ = define.page(function PostDetail({
   }), u("a", {
     href: "/auth/login",
     children: "登录"
-  }))));
+  }))), u("script", {
+    dangerouslySetInnerHTML: {
+      __html: `
+        document.getElementById('back-btn').addEventListener('click', function(e) {
+          if (history.length > 1) {
+            e.preventDefault();
+            history.back();
+          }
+        });
+      `
+    }
+  }));
 });
 const routeCss = null;
 const css = routeCss;

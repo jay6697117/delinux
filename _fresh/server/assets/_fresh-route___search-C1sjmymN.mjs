@@ -1,5 +1,5 @@
 import { d as define, a, s, l, u, g as getBoardBySlug } from "../server-entry.mjs";
-import { s as searchPosts } from "./posts-DP3b7mwx.mjs";
+import { s as searchPosts } from "./posts-CchskeWA.mjs";
 import { t as timeAgo } from "./time-AqCAYVTU.mjs";
 const $$_tpl_1 = ["<div ", '><h1 class="page-title" ', '>🔍 搜索</h1><form method="GET" class="search-bar"><input class="form-input" type="text" name="q" ', ' placeholder="搜索帖子标题..." autofocus><button type="submit" class="btn btn-primary">搜索</button></form>', "</div>"];
 const $$_tpl_2 = ['<div class="card"><div class="card-header">搜索 &quot;', "&quot; 的结果 (", ")</div>", "</div>"];

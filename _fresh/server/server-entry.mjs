@@ -2569,7 +2569,7 @@ exports$1.propagation;
 var _trace = exports$1.trace;
 exports$1.default ?? exports$1;
 exports$1.__esModule;
-let BUILD_ID = "d77a5ca0cf687a1c0ede986421d8b803e95dff7e";
+let BUILD_ID = "42c9a323bb111d530cf1c2031864ef65bf41fe50";
 const DENO_DEPLOYMENT_ID = void 0;
 function setBuildId(id) {
   BUILD_ID = id;
@@ -5979,11 +5979,12 @@ const BOARDS = [{
 }];
 async function initBoards() {
   const kv = await getKv();
-  for (const board of BOARDS) {
-    const existing = await kv.get(["boards", board.slug]);
-    if (!existing.value) {
-      await kv.set(["boards", board.slug], board);
-    }
+  const existingEntries = await Promise.all(BOARDS.map((board) => kv.get(["boards", board.slug], {
+    consistency: "eventual"
+  })));
+  const missing = BOARDS.filter((_2, i2) => !existingEntries[i2].value);
+  if (missing.length > 0) {
+    await Promise.all(missing.map((board) => kv.set(["boards", board.slug], board)));
   }
 }
 const BOARD_BY_SLUG = new Map(BOARDS.map((b2) => [b2.slug, b2]));
@@ -6007,7 +6008,7 @@ const boards = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProper
   initBoards
 }, Symbol.toStringTag, { value: "Module" }));
 const $$_tpl_2 = ['<span class="logo-icon">⚡</span><span>DeLinux</span>'];
-const $$_tpl_1$2 = ['<header class="header"><div class="header-inner">', '<nav class="nav-links">', "", '</nav><div class="header-actions">', '<button class="menu-toggle" id="menuToggle" aria-label="打开菜单">☰</button>', '</div></div></header><div class="mobile-nav" id="mobileNav"><ul class="mobile-nav-links"><li>', "</li>", '<li><div class="mobile-nav-divider"></div></li><li>', "</li>", '</ul></div><main class="container">', '</main><footer class="footer"><div class="container"><p>© 2026 DeLinux — AI + 生活社区 · 部署在 Deno Deploy 上</p></div></footer>', "", "", ""];
+const $$_tpl_1$2 = ['<header class="header"><div class="header-inner">', '<nav class="nav-links">', "", '</nav><div class="header-actions">', '<button class="menu-toggle" id="menuToggle" aria-label="打开菜单">☰</button>', '</div></div></header><div class="mobile-nav" id="mobileNav"><ul class="mobile-nav-links"><li>', "</li>", '<li><div class="mobile-nav-divider"></div></li><li>', "</li>", '</ul></div><main class="container">', '</main><footer class="footer"><div class="container"><p>© 2026 DeLinux — AI + 生活社区 · 部署在 Deno Deploy 上</p></div></footer>', "", ""];
 const $$_tpl_3 = ["", "", "", "", ""];
 const $$_tpl_4 = ["", "", ""];
 const $$_tpl_5 = ["<li ", ">", "</li>"];
@@ -6058,6 +6059,7 @@ const _app = define.page(function App2({
         href: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>"
       })]
     }), u$2("body", {
+      "f-client-nav": true,
       children: a$2($$_tpl_1$2, u$2("a", {
         href: "/",
         class: "logo",
@@ -6135,7 +6137,10 @@ const _app = define.page(function App2({
         href: "/auth/register",
         class: "mobile-nav-link",
         children: "📝 注册"
-      }))), u$2(Component, null), u$2("script", {
+      }))), u$2(Partial, {
+        name: "body",
+        children: u$2(Component, null)
+      }), u$2("script", {
         dangerouslySetInnerHTML: {
           __html: `
           (function() {
@@ -6185,7 +6190,6 @@ const _app = define.page(function App2({
               progress = 0;
               bar.style.opacity = '1';
               bar.style.width = '0';
-              // 用 requestAnimationFrame 平滑递增
               function tick() {
                 if (progress < 30) progress += 3;
                 else if (progress < 60) progress += 1.5;
@@ -6205,74 +6209,30 @@ const _app = define.page(function App2({
               }, 200);
             }
 
-            // 监听所有内部链接点击
-            document.addEventListener('click', function(e) {
-              var a = e.target.closest('a');
-              if (!a) return;
-              var href = a.getAttribute('href');
-              if (!href) return;
-              // 跳过外链、锚点、新窗口、特殊协议
-              if (href.startsWith('http') || href.startsWith('#') || href.startsWith('data:') || href.startsWith('javascript:')) return;
-              if (a.target === '_blank') return;
-              start();
-            });
+            // 拦截 fetch 以监听 Partial 导航请求
+            var _fetch = window.fetch;
+            window.fetch = function() {
+              var url = arguments[0];
+              if (typeof url === 'string' && url.includes('fresh-partial=true')) {
+                start();
+                return _fetch.apply(this, arguments).then(function(resp) {
+                  done();
+                  return resp;
+                }).catch(function(err) {
+                  done();
+                  throw err;
+                });
+              }
+              return _fetch.apply(this, arguments);
+            };
 
-            // 表单提交也显示进度条
-            document.addEventListener('submit', function() { start(); });
-
-            // 页面卸载前加速到 90%
+            // 传统全页面刷新的降级处理
             window.addEventListener('beforeunload', function() {
               if (rafId) cancelAnimationFrame(rafId);
               progress = 90;
               bar.style.width = '90%';
             });
-
-            // 页面完全加载后完成
             window.addEventListener('pageshow', function() { done(); });
-          })();
-        `
-        }
-      }), u$2("script", {
-        dangerouslySetInnerHTML: {
-          __html: `
-          (function() {
-            var fetched = new Set();
-            var timer = null;
-
-            function prefetch(url) {
-              if (fetched.has(url)) return;
-              fetched.add(url);
-              var link = document.createElement('link');
-              link.rel = 'prefetch';
-              link.href = url;
-              link.as = 'document';
-              document.head.appendChild(link);
-            }
-
-            // PC端：鼠标悬停 80ms 后预取
-            document.addEventListener('mouseover', function(e) {
-              var a = e.target.closest('a');
-              if (!a) return;
-              var href = a.getAttribute('href');
-              if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('data:') || href.startsWith('javascript:')) return;
-              if (a.target === '_blank') return;
-              clearTimeout(timer);
-              timer = setTimeout(function() { prefetch(href); }, 80);
-            });
-
-            // 移动端：touchstart 即预取
-            document.addEventListener('touchstart', function(e) {
-              var a = e.target.closest('a');
-              if (!a) return;
-              var href = a.getAttribute('href');
-              if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('data:') || href.startsWith('javascript:')) return;
-              prefetch(href);
-            }, { passive: true });
-
-            // 鼠标移出时取消计时器
-            document.addEventListener('mouseout', function() {
-              clearTimeout(timer);
-            });
           })();
         `
         }
@@ -6372,36 +6332,36 @@ const fsRoute_2 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePro
   handler,
   handlers
 }, Symbol.toStringTag, { value: "Module" }));
-const clientEntry = "./assets/client-entry-CD3ffyf4.js";
-const version = "d77a5ca0cf687a1c0ede986421d8b803e95dff7e";
+const clientEntry = "./assets/client-entry-DadVmE7X.js";
+const version = "42c9a323bb111d530cf1c2031864ef65bf41fe50";
 const islands = /* @__PURE__ */ new Map();
 const staticFiles = /* @__PURE__ */ new Map([
-  ["/assets/client-entry-CD3ffyf4.js", { "name": "/assets/client-entry-CD3ffyf4.js", "hash": "0e728738324acd362fa68823839340c2091e14e31a90f5b240420a222cb0eb00", "filePath": "client/assets/client-entry-CD3ffyf4.js", "contentType": "text/javascript; charset=UTF-8" }],
-  ["/styles.css", { "name": "/styles.css", "hash": "ccadc8e40dba8f9f2ca251fd61e26beb2d2aac3ca138d691ded97d22782dfeb3", "filePath": "client/styles.css", "contentType": "text/css; charset=UTF-8" }]
+  ["/assets/client-entry-DadVmE7X.js", { "name": "/assets/client-entry-DadVmE7X.js", "hash": "a9c1a77391217cbe1306b6af14e024e99e55fcdfed698db2466626a373e351f3", "filePath": "client/assets/client-entry-DadVmE7X.js", "contentType": "text/javascript; charset=UTF-8" }],
+  ["/styles.css", { "name": "/styles.css", "hash": "83f0daed212075388e424999def6b4aef801296d9c7041d9934cf16659a640a0", "filePath": "client/styles.css", "contentType": "text/css; charset=UTF-8" }]
 ]);
 const entryAssets = [];
 const fsRoutes = [
   { id: "/_app", mod: fsRoute_0, type: "app", pattern: "*", routePattern: "*" },
   { id: "/_500", mod: fsRoute_1, type: "error", pattern: "/", routePattern: "/" },
   { id: "/_404", mod: fsRoute_2, type: "notFound", pattern: "*", routePattern: "*" },
-  { id: "/index", mod: () => import("./assets/_fresh-route___index-p_ejux5l.mjs"), type: "route", pattern: "/", routePattern: "/" },
-  { id: "/post/new", mod: () => import("./assets/_fresh-route___post_new-6AMfRN7I.mjs"), type: "route", pattern: "/post/new", routePattern: "/post/new" },
-  { id: "/post/[id]", mod: () => import("./assets/_fresh-route___post_id_-DoBTg8-P.mjs"), type: "route", pattern: "/post/:id", routePattern: "/post/:id" },
-  { id: "/board/[slug]", mod: () => import("./assets/_fresh-route___board_slug_-CD-1W2rq.mjs"), type: "route", pattern: "/board/:slug", routePattern: "/board/:slug" },
+  { id: "/index", mod: () => import("./assets/_fresh-route___index-BBBhr_Ch.mjs"), type: "route", pattern: "/", routePattern: "/" },
+  { id: "/post/new", mod: () => import("./assets/_fresh-route___post_new-DCKrtpc8.mjs"), type: "route", pattern: "/post/new", routePattern: "/post/new" },
+  { id: "/post/[id]", mod: () => import("./assets/_fresh-route___post_id_-9xMu-Kr7.mjs"), type: "route", pattern: "/post/:id", routePattern: "/post/:id" },
+  { id: "/board/[slug]", mod: () => import("./assets/_fresh-route___board_slug_-Cxf_Axi0.mjs"), type: "route", pattern: "/board/:slug", routePattern: "/board/:slug" },
   { id: "/auth/login", mod: () => import("./assets/_fresh-route___auth_login-Bfp3iNyq.mjs"), type: "route", pattern: "/auth/login", routePattern: "/auth/login" },
   { id: "/auth/change-password", mod: () => import("./assets/_fresh-route___auth_change_password-Bjikqdf7.mjs"), type: "route", pattern: "/auth/change-password", routePattern: "/auth/change-password" },
   { id: "/auth/register", mod: () => import("./assets/_fresh-route___auth_register-V2tc5Caj.mjs"), type: "route", pattern: "/auth/register", routePattern: "/auth/register" },
   { id: "/auth/logout", mod: () => import("./assets/_fresh-route___auth_logout-C0sX4kxh.mjs"), type: "route", pattern: "/auth/logout", routePattern: "/auth/logout" },
-  { id: "/search", mod: () => import("./assets/_fresh-route___search-m6pWBZU5.mjs"), type: "route", pattern: "/search", routePattern: "/search" },
-  { id: "/admin/index", mod: () => import("./assets/_fresh-route___admin_index-D6JIOXE1.mjs"), type: "route", pattern: "/admin/", routePattern: "/admin" },
-  { id: "/user/[id]", mod: () => import("./assets/_fresh-route___user_id_-C2bCF3gJ.mjs"), type: "route", pattern: "/user/:id", routePattern: "/user/:id" },
-  { id: "/api/favorite", mod: () => import("./assets/_fresh-route___api_favorite-Ua6OQ1Zm.mjs"), type: "route", pattern: "/api/favorite", routePattern: "/api/favorite" },
-  { id: "/api/admin/delete-post", mod: () => import("./assets/_fresh-route___api_admin_delete_post-DzRbdcra.mjs"), type: "route", pattern: "/api/admin/delete-post", routePattern: "/api/admin/delete-post" },
+  { id: "/search", mod: () => import("./assets/_fresh-route___search-C1sjmymN.mjs"), type: "route", pattern: "/search", routePattern: "/search" },
+  { id: "/admin/index", mod: () => import("./assets/_fresh-route___admin_index-CSUIxWQS.mjs"), type: "route", pattern: "/admin/", routePattern: "/admin" },
+  { id: "/user/[id]", mod: () => import("./assets/_fresh-route___user_id_-BSOTC9w5.mjs"), type: "route", pattern: "/user/:id", routePattern: "/user/:id" },
+  { id: "/api/favorite", mod: () => import("./assets/_fresh-route___api_favorite-NeIuFuUE.mjs"), type: "route", pattern: "/api/favorite", routePattern: "/api/favorite" },
+  { id: "/api/admin/delete-post", mod: () => import("./assets/_fresh-route___api_admin_delete_post-s6-9-lfI.mjs"), type: "route", pattern: "/api/admin/delete-post", routePattern: "/api/admin/delete-post" },
   { id: "/api/admin/delete-user", mod: () => import("./assets/_fresh-route___api_admin_delete_user-DFDQtm3x.mjs"), type: "route", pattern: "/api/admin/delete-user", routePattern: "/api/admin/delete-user" },
   { id: "/api/admin/clear-all", mod: () => import("./assets/_fresh-route___api_admin_clear_all-Do5dHAjP.mjs"), type: "route", pattern: "/api/admin/clear-all", routePattern: "/api/admin/clear-all" },
   { id: "/api/admin/ban-user", mod: () => import("./assets/_fresh-route___api_admin_ban_user-CQLceJaN.mjs"), type: "route", pattern: "/api/admin/ban-user", routePattern: "/api/admin/ban-user" },
   { id: "/api/admin/reset-password", mod: () => import("./assets/_fresh-route___api_admin_reset_password-C680R4LP.mjs"), type: "route", pattern: "/api/admin/reset-password", routePattern: "/api/admin/reset-password" },
-  { id: "/api/like", mod: () => import("./assets/_fresh-route___api_like-By7-Gz8Q.mjs"), type: "route", pattern: "/api/like", routePattern: "/api/like" },
+  { id: "/api/like", mod: () => import("./assets/_fresh-route___api_like-Dg3BdKvf.mjs"), type: "route", pattern: "/api/like", routePattern: "/api/like" },
   { id: "/api/health", mod: () => import("./assets/_fresh-route___api_health-DDaOAP-w.mjs"), type: "route", pattern: "/api/health", routePattern: "/api/health" }
 ];
 const snapshot = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
@@ -6556,7 +6516,9 @@ async function loginUser(email, password) {
 }
 async function getUserById(id) {
   const kv = await getKv();
-  const entry = await kv.get(["users", id]);
+  const entry = await kv.get(["users", id], {
+    consistency: "eventual"
+  });
   if (!entry.value) return null;
   const {
     passwordHash: _2,
@@ -6604,7 +6566,9 @@ async function createSession(userId) {
 }
 async function getSession(sessionId) {
   const kv = await getKv();
-  const entry = await kv.get(["sessions", sessionId]);
+  const entry = await kv.get(["sessions", sessionId], {
+    consistency: "eventual"
+  });
   if (!entry.value) return null;
   if (entry.value.expiresAt < Date.now()) {
     await kv.delete(["sessions", sessionId]);

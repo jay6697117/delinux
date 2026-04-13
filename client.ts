@@ -1,1 +1,2 @@
-// Fresh client entry — CSS 统一由 _app.tsx 的 <link> 引入，不在此处重复导入
+// Fresh 客户端入口 — 导入 runtime 以激活 Partials 客户端导航
+import "fresh/runtime";

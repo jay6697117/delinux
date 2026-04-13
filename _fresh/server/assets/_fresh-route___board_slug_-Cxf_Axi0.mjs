@@ -1,5 +1,5 @@
 import { d as define, a, s, u, l, g as getBoardBySlug, b as getKv } from "../server-entry.mjs";
-import { g as getPostsByIds } from "./posts-DP3b7mwx.mjs";
+import { g as getPostsByIds } from "./posts-CchskeWA.mjs";
 import { t as timeAgo } from "./time-AqCAYVTU.mjs";
 const $$_tpl_1 = ['<div><div class="page-header"><h1 class="page-title">', " ", " — ", "</h1>", '</div><div class="card">', "", "</div></div>"];
 const $$_tpl_2 = ['<div class="empty-state"><div class="empty-state-icon">', '</div><p class="empty-state-text">这个版块还没有帖子</p></div>'];
@@ -21,7 +21,8 @@ const handler$1 = define.handlers({
       prefix: ["posts_by_board", slug]
     }, {
       limit: limit + 1,
-      cursor
+      cursor,
+      consistency: "eventual"
     });
     const postIds = [];
     let nextCursor;

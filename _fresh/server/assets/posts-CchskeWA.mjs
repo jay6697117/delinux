@@ -31,13 +31,17 @@ async function createPost(title, content, authorId, authorName, boardSlug) {
 }
 async function getPost(id) {
   const kv = await getKv();
-  const entry = await kv.get(["posts", id]);
+  const entry = await kv.get(["posts", id], {
+    consistency: "eventual"
+  });
   return entry.value;
 }
 async function getPostsByIds(ids, kvReader) {
   if (ids.length === 0) return [];
   const kv = await getKv();
-  const entries = await Promise.all(ids.map((id) => kv.get(["posts", id])));
+  const entries = await Promise.all(ids.map((id) => kv.get(["posts", id], {
+    consistency: "eventual"
+  })));
   return entries.filter((entry) => entry.value !== null).map((entry) => entry.value);
 }
 async function deletePost(id) {
@@ -83,7 +87,8 @@ async function getReplies(postId, cursor, limit = 20) {
     prefix: ["replies", postId]
   }, {
     limit: limit + 1,
-    cursor
+    cursor,
+    consistency: "eventual"
   });
   const items = [];
   let nextCursor;
@@ -123,7 +128,9 @@ async function toggleLike(postId, userId) {
 }
 async function isLiked(postId, userId) {
   const kv = await getKv();
-  const entry = await kv.get(["likes", postId, userId]);
+  const entry = await kv.get(["likes", postId, userId], {
+    consistency: "eventual"
+  });
   return !!entry.value;
 }
 async function toggleFavorite(postId, userId) {
@@ -140,7 +147,9 @@ async function toggleFavorite(postId, userId) {
 }
 async function isFavorited(postId, userId) {
   const kv = await getKv();
-  const entry = await kv.get(["favorites", userId, postId]);
+  const entry = await kv.get(["favorites", userId, postId], {
+    consistency: "eventual"
+  });
   return !!entry.value;
 }
 async function getUserFavorites(userId, cursor, limit = 20) {
@@ -149,7 +158,8 @@ async function getUserFavorites(userId, cursor, limit = 20) {
     prefix: ["favorites", userId]
   }, {
     limit: limit + 1,
-    cursor
+    cursor,
+    consistency: "eventual"
   });
   const postIds = [];
   let nextCursor;
@@ -211,7 +221,8 @@ async function searchPosts(query, limit = 30) {
     const entries = kv.list({
       prefix: ["search_words", word]
     }, {
-      limit: 50
+      limit: 50,
+      consistency: "eventual"
     });
     for await (const entry of entries) {
       const postId = entry.key[2];
