@@ -1,0 +1,21 @@
+{
+  "tasks": {
+    "dev": "deno run -A --watch=routes/,islands/,components/,utils/ main.ts",
+    "build": "deno run -A main.ts build",
+    "start": "deno run -A main.ts"
+  },
+  "imports": {
+    "fresh": "jsr:@fresh/core@^2.0.0-rc.16",
+    "fresh/runtime": "jsr:@fresh/core@^2.0.0-rc.16/runtime",
+    "preact": "npm:preact@^10.25.4",
+    "preact/": "npm:preact@^10.25.4/",
+    "@preact/signals": "npm:@preact/signals@^2.0.0",
+    "marked": "npm:marked@^15.0.0",
+    "$std/": "jsr:@std/"
+  },
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  },
+  "nodeModulesDir": "auto"
+}
