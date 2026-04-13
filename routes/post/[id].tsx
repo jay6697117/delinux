@@ -57,7 +57,11 @@ export default define.page<typeof handler>(function PostDetail({ data, state }) 
     <div style={{ padding: "var(--space-md) 0" }}>
       <div class="card">
         <div class="post-detail">
-          <div style={{ marginBottom: "var(--space-sm)" }}>
+          {/* 返回按钮和版块标签 */}
+          <div class="post-detail-topbar">
+            <a href={`/board/${post.boardSlug}`} class="back-btn" id="back-btn">
+              ← 返回
+            </a>
             <a href={`/board/${post.boardSlug}`} class="post-board-tag">{board?.icon} {board?.name}</a>
           </div>
           <h1 class="post-detail-title">{post.title}</h1>
@@ -109,6 +113,14 @@ export default define.page<typeof handler>(function PostDetail({ data, state }) 
           <p style={{ color: "var(--text-secondary)" }}><a href="/auth/login">登录</a> 后参与讨论</p>
         </div>
       )}
+      <script dangerouslySetInnerHTML={{ __html: `
+        document.getElementById('back-btn').addEventListener('click', function(e) {
+          if (history.length > 1) {
+            e.preventDefault();
+            history.back();
+          }
+        });
+      ` }} />
     </div>
   );
 });
