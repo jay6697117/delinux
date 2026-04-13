@@ -8,9 +8,11 @@ import { initBoards } from "./utils/boards.ts";
 
 export const app = new App<State>();
 
-// P2: 静态资源缓存（styles.css 缓存 7 天，必须在 staticFiles 之前注册）
+// P2: 静态资源缓存（必须在 staticFiles 之前注册）
 app.use(async (ctx) => {
   const { pathname } = new URL(ctx.req.url);
+
+  // styles.css 缓存 7 天
   if (pathname === "/styles.css") {
     const resp = await ctx.next();
     const headers = new Headers(resp.headers);
@@ -20,6 +22,18 @@ app.use(async (ctx) => {
     );
     return new Response(resp.body, { status: resp.status, headers });
   }
+
+  // /_fresh/ 下的 hashed 资源：永久缓存（文件名包含 hash，内容变化后 URL 自动变化）
+  if (pathname.startsWith("/_fresh/")) {
+    const resp = await ctx.next();
+    const headers = new Headers(resp.headers);
+    headers.set(
+      "cache-control",
+      "public, max-age=31536000, immutable",
+    );
+    return new Response(resp.body, { status: resp.status, headers });
+  }
+
   return ctx.next();
 });
 
@@ -80,12 +94,14 @@ app.use(async (ctx) => {
     // Session 解析失败不影响页面渲染，继续
   }
 
-  // P2: 为 HTML 页面添加短期缓存（浏览器缓存 30 秒，后台验证 5 分钟）
+  // P2: 为 HTML 页面添加短期缓存 + CSS 预加载 Link header
   const resp = await ctx.next();
   const ct = resp.headers.get("content-type") || "";
   if (ct.includes("text/html") && resp.status === 200) {
     const headers = new Headers(resp.headers);
     headers.set("cache-control", "public, max-age=30, stale-while-revalidate=300");
+    // 通过 Link header 让浏览器尽早发现并加载 CSS（比解析 HTML 更快）
+    headers.set("link", "</styles.css>; rel=preload; as=style");
     return new Response(resp.body, { status: resp.status, headers });
   }
   return resp;

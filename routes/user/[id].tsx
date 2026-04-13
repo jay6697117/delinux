@@ -47,6 +47,11 @@ export default define.page<typeof handler>(function UserPage({ data }) {
             </h1>
             <p>加入于 {timeAgo(profileUser.createdAt)}</p>
           </div>
+          {isOwner && (
+            <a href="/auth/change-password" class="btn btn-secondary btn-sm" style={{ marginLeft: "auto", alignSelf: "center" }}>
+              🔑 修改密码
+            </a>
+          )}
         </div>
       </div>
       <div class="tabs" style={{ marginTop: "var(--space-md)" }}>

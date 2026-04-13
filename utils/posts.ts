@@ -239,7 +239,7 @@ export async function getUserFavorites(
     cursor,
   });
 
-  const posts: Post[] = [];
+  const postIds: string[] = [];
   let nextCursor: string | undefined;
   let count = 0;
 
@@ -247,13 +247,17 @@ export async function getUserFavorites(
     count++;
     if (count > limit) break;
     // key 格式：["favorites", userId, postId]
-    const postId = entry.key[2] as string;
-    const postEntry = await kv.get<Post>(["posts", postId]);
-    if (postEntry.value) {
-      posts.push(postEntry.value);
-    }
+    postIds.push(entry.key[2] as string);
     nextCursor = entries.cursor;
   }
+
+  // 并行批量获取帖子详情（替代串行循环）
+  const postEntries = await Promise.all(
+    postIds.map((id) => kv.get<Post>(["posts", id])),
+  );
+  const posts = postEntries
+    .filter((e) => e.value !== null)
+    .map((e) => e.value as Post);
 
   return {
     items: posts,
@@ -340,12 +344,13 @@ export async function searchPosts(
     .slice(0, limit)
     .map(([id]) => id);
 
-  // 批量获取帖子详情
-  const posts: Post[] = [];
-  for (const postId of sortedIds) {
-    const postEntry = await kv.get<Post>(["posts", postId]);
-    if (postEntry.value) posts.push(postEntry.value);
-  }
+  // 并行批量获取帖子详情（替代串行循环）
+  const postEntries = await Promise.all(
+    sortedIds.map((id) => kv.get<Post>(["posts", id])),
+  );
+  const posts = postEntries
+    .filter((e) => e.value !== null)
+    .map((e) => e.value as Post);
 
   return posts;
 }

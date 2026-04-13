@@ -14,6 +14,17 @@ export default define.page(function App({ Component, state, url }) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>DeLinux — AI + 生活社区</title>
         <meta name="description" content="DeLinux 是一个 AI 与生活交流的纯文字论坛社区" />
+        {/* 关键 CSS 内联：消除首屏渲染阻塞 */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          :root{--bg-primary:#0d1117;--bg-secondary:#161b22;--bg-tertiary:#21262d;--bg-hover:#292e36;--border-color:#30363d;--text-primary:#e6edf3;--text-secondary:#8b949e;--text-tertiary:#6e7681;--text-link:#58a6ff;--accent:#58a6ff;--space-xs:4px;--space-sm:8px;--space-md:16px;--space-lg:24px;--space-xl:32px;--radius-md:6px;--radius-lg:12px;--font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",Helvetica,Arial,sans-serif;--max-width:960px;--header-height:56px}
+          *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+          html{font-size:14px;-webkit-font-smoothing:antialiased}
+          body{font-family:var(--font-sans);background:var(--bg-primary);color:var(--text-primary);line-height:1.6;min-height:100vh}
+          .header{height:var(--header-height);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);background:rgba(22,27,34,.85);border-bottom:1px solid var(--border-color)}
+          .header-inner{max-width:var(--max-width);margin:0 auto;padding:0 var(--space-md);height:100%;display:flex;align-items:center;justify-content:space-between}
+          .container{max-width:var(--max-width);margin:0 auto;padding:0 var(--space-md)}
+        ` }} />
+        <link rel="preload" href="/styles.css" as="style" />
         <link rel="stylesheet" href="/styles.css" />
         <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
       </head>
@@ -241,6 +252,49 @@ export default define.page(function App({ Component, state, url }) {
 
             // 页面完全加载后完成
             window.addEventListener('pageshow', function() { done(); });
+          })();
+        `}} />
+
+        {/* 链接悬停预取：实现近乎 SPA 的页面切换速度 */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            var fetched = new Set();
+            var timer = null;
+
+            function prefetch(url) {
+              if (fetched.has(url)) return;
+              fetched.add(url);
+              var link = document.createElement('link');
+              link.rel = 'prefetch';
+              link.href = url;
+              link.as = 'document';
+              document.head.appendChild(link);
+            }
+
+            // PC端：鼠标悬停 80ms 后预取
+            document.addEventListener('mouseover', function(e) {
+              var a = e.target.closest('a');
+              if (!a) return;
+              var href = a.getAttribute('href');
+              if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('data:') || href.startsWith('javascript:')) return;
+              if (a.target === '_blank') return;
+              clearTimeout(timer);
+              timer = setTimeout(function() { prefetch(href); }, 80);
+            });
+
+            // 移动端：touchstart 即预取
+            document.addEventListener('touchstart', function(e) {
+              var a = e.target.closest('a');
+              if (!a) return;
+              var href = a.getAttribute('href');
+              if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('data:') || href.startsWith('javascript:')) return;
+              prefetch(href);
+            }, { passive: true });
+
+            // 鼠标移出时取消计时器
+            document.addEventListener('mouseout', function() {
+              clearTimeout(timer);
+            });
           })();
         `}} />
       </body>

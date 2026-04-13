@@ -9,20 +9,22 @@ import { renderMarkdown } from "../../utils/markdown.ts";
 export const handler = define.handlers({
   async GET(ctx) {
     const { id } = ctx.params;
+
+    // 先获取帖子（必须先确认存在性）
     const post = await getPost(id);
     if (!post) return ctx.renderNotFound();
+
     // 同步获取版块信息，不查 KV
     const boards = getAllBoards();
     const board = boards.find(b => b.slug === post.boardSlug);
 
-    // 并行查询回复、点赞、收藏（减少串行等待时间）
-    const [repliesResult, liked, favorited] = ctx.state.user
-      ? await Promise.all([
-          getReplies(id),
-          isLiked(id, ctx.state.user.id),
-          isFavorited(id, ctx.state.user.id),
-        ])
-      : [await getReplies(id), false, false];
+    // 并行查询回复、点赞、收藏（登录/未登录都用 Promise.all 并行）
+    const userId = ctx.state.user?.id;
+    const [repliesResult, liked, favorited] = await Promise.all([
+      getReplies(id),
+      userId ? isLiked(id, userId) : Promise.resolve(false),
+      userId ? isFavorited(id, userId) : Promise.resolve(false),
+    ]);
 
     const htmlContent = renderMarkdown(post.content);
     return { data: { post, board, replies: repliesResult.items, htmlContent, liked, favorited, replyError: "" } };

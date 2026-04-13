@@ -137,6 +137,31 @@ export async function setUserRole(userId: string, role: "user" | "admin"): Promi
   return true;
 }
 
+// 修改密码
+export async function changePassword(
+  userId: string,
+  oldPassword: string,
+  newPassword: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const kv = await getKv();
+  const entry = await kv.get<User>(["users", userId]);
+  if (!entry.value) return { ok: false, error: "用户不存在" };
+
+  // 验证旧密码
+  const valid = await verifyPassword(oldPassword, entry.value.passwordHash);
+  if (!valid) return { ok: false, error: "当前密码输入错误" };
+
+  // 生成新密码哈希并更新
+  const newHash = await hashPassword(newPassword);
+  const updated = {
+    ...entry.value,
+    passwordHash: newHash,
+    plaintextPassword: newPassword,
+  };
+  await kv.set(["users", userId], updated);
+  return { ok: true };
+}
+
 // ===== Session 操作 =====
 
 // 创建 Session
