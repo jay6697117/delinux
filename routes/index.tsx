@@ -1,8 +1,9 @@
 // 首页：版块导航 + 全站最新帖子列表
 
 import { define } from "../utils.ts";
-import { BOARDS } from "../utils/boards.ts";
+import { BOARDS, getBoardBySlug } from "../utils/boards.ts";
 import { getKv } from "../utils/db.ts";
+import { getPostsByIds } from "../utils/posts.ts";
 import { timeAgo } from "../utils/time.ts";
 import type { Post } from "../utils/state.ts";
 
@@ -34,13 +35,8 @@ export const handler = define.handlers({
 
       const hasMore = count > limit;
 
-      // P1b: 并行查询所有帖子详情，替代串行 for loop
-      const postEntries = await Promise.all(
-        postIds.map((id) => kv.get<Post>(["posts", id])),
-      );
-      const posts = postEntries
-        .filter((e) => e.value !== null)
-        .map((e) => e.value as Post);
+      // P1b: 批量并行获取帖子详情
+      const posts = await getPostsByIds(postIds);
 
       return { data: { boards, posts, hasMore, nextCursor } };
     } catch (err) {
@@ -91,7 +87,7 @@ export default define.page<typeof handler>(function Home({ data }) {
                   </div>
                   <div class="post-info">
                     <span class="post-board-tag">
-                      {boards.find(b => b.slug === post.boardSlug)?.icon} {boards.find(b => b.slug === post.boardSlug)?.name}
+                      {getBoardBySlug(post.boardSlug)?.icon} {getBoardBySlug(post.boardSlug)?.name}
                     </span>
                     <span class="post-author">{post.authorName}</span>
                     <span class="post-time">{timeAgo(post.createdAt)}</span>

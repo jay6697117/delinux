@@ -61,6 +61,18 @@ export async function getPost(id: string): Promise<Post | null> {
   return entry.value;
 }
 
+// 批量获取帖子（并行 kv.get，替代各页面重复手写的 Promise.all + kv.get 模式）
+export async function getPostsByIds(ids: string[]): Promise<Post[]> {
+  if (ids.length === 0) return [];
+  const kv = await getKv();
+  const entries = await Promise.all(
+    ids.map((id) => kv.get<Post>(["posts", id])),
+  );
+  return entries
+    .filter((e) => e.value !== null)
+    .map((e) => e.value as Post);
+}
+
 // 删除帖子（管理员）
 export async function deletePost(id: string): Promise<boolean> {
   const kv = await getKv();

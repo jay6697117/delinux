@@ -2,21 +2,20 @@
 
 import { define } from "../utils.ts";
 import { searchPosts } from "../utils/posts.ts";
-import { getAllBoards } from "../utils/boards.ts";
+import { getBoardBySlug } from "../utils/boards.ts";
 import { timeAgo } from "../utils/time.ts";
 
 export const handler = define.handlers({
   async GET(ctx) {
     const url = new URL(ctx.req.url);
     const query = url.searchParams.get("q") || "";
-    const boards = getAllBoards();
     const posts = query ? await searchPosts(query) : [];
-    return { data: { query, boards, posts } };
+    return { data: { query, posts } };
   },
 });
 
 export default define.page<typeof handler>(function SearchPage({ data }) {
-  const { query, boards, posts } = data;
+  const { query, posts } = data;
   return (
     <div style={{ padding: "var(--space-md) 0" }}>
       <h1 class="page-title" style={{ marginBottom: "var(--space-md)" }}>🔍 搜索</h1>
@@ -37,7 +36,7 @@ export default define.page<typeof handler>(function SearchPage({ data }) {
                   <div class="post-content-area">
                     <div class="post-title"><a href={`/post/${post.id}`}>{post.title}</a></div>
                     <div class="post-info">
-                      <span class="post-board-tag">{boards.find(b => b.slug === post.boardSlug)?.icon} {boards.find(b => b.slug === post.boardSlug)?.name}</span>
+                      <span class="post-board-tag">{getBoardBySlug(post.boardSlug)?.icon} {getBoardBySlug(post.boardSlug)?.name}</span>
                       <span class="post-author">{post.authorName}</span>
                       <span class="post-time">{timeAgo(post.createdAt)}</span>
                     </div>

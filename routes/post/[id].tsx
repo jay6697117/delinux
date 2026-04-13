@@ -2,7 +2,7 @@
 
 import { define } from "../../utils.ts";
 import { getPost, getReplies, isLiked, isFavorited, createReply } from "../../utils/posts.ts";
-import { getAllBoards, BOARDS } from "../../utils/boards.ts";
+import { getBoardBySlug } from "../../utils/boards.ts";
 import { timeAgo, formatDate } from "../../utils/time.ts";
 import { renderMarkdown } from "../../utils/markdown.ts";
 
@@ -14,9 +14,8 @@ export const handler = define.handlers({
     const post = await getPost(id);
     if (!post) return ctx.renderNotFound();
 
-    // 同步获取版块信息，不查 KV
-    const boards = getAllBoards();
-    const board = boards.find(b => b.slug === post.boardSlug);
+    // O(1) 查找版块
+    const board = getBoardBySlug(post.boardSlug);
 
     // 并行查询回复、点赞、收藏（登录/未登录都用 Promise.all 并行）
     const userId = ctx.state.user?.id;
@@ -37,8 +36,7 @@ export const handler = define.handlers({
     if (!content) {
       const post = await getPost(id);
       if (!post) return ctx.renderNotFound();
-      const boards = getAllBoards();
-      const board = boards.find(b => b.slug === post.boardSlug);
+      const board = getBoardBySlug(post.boardSlug);
       // 并行查询
       const [repliesResult, liked, favorited] = await Promise.all([
         getReplies(id),

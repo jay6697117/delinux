@@ -53,6 +53,16 @@ export async function initBoards(): Promise<void> {
   }
 }
 
+// 预构建 slug → Board 只读映射，O(1) 查找替代 boards.find()
+const BOARD_BY_SLUG: ReadonlyMap<string, Board> = new Map(
+  BOARDS.map((b) => [b.slug, b]),
+);
+
+// 按 slug 查找版块（O(1)）
+export function getBoardBySlug(slug: string): Board | undefined {
+  return BOARD_BY_SLUG.get(slug);
+}
+
 // 获取所有版块（直接返回静态常量，避免无意义的 KV 查询）
 export function getAllBoards(): Board[] {
   return BOARDS;

@@ -2,10 +2,10 @@
 
 import { define } from "../../utils.ts";
 import { getUserById } from "../../utils/auth.ts";
-import { getUserFavorites } from "../../utils/posts.ts";
+import { getUserFavorites, getPostsByIds } from "../../utils/posts.ts";
 import { getKv } from "../../utils/db.ts";
 import { timeAgo } from "../../utils/time.ts";
-import { getAllBoards } from "../../utils/boards.ts";
+import { getBoardBySlug } from "../../utils/boards.ts";
 import type { Post } from "../../utils/state.ts";
 
 export const handler = define.handlers({
@@ -15,25 +15,25 @@ export const handler = define.handlers({
     if (!user) return ctx.renderNotFound();
     const url = new URL(ctx.req.url);
     const tab = url.searchParams.get("tab") || "posts";
-    const boards = await getAllBoards();
     const kv = await getKv();
     let posts: Post[] = [];
     if (tab === "posts") {
       const entries = kv.list<string>({ prefix: ["posts_by_user", id] }, { limit: 20 });
       const postIds: string[] = [];
       for await (const entry of entries) postIds.push(entry.value as string);
-      for (const postId of postIds) { const pe = await kv.get<Post>(["posts", postId]); if (pe.value) posts.push(pe.value); }
+      // 批量并行获取，替代串行 N+1
+      posts = await getPostsByIds(postIds);
     } else if (tab === "favorites" && ctx.state.user?.id === id) {
       const result = await getUserFavorites(id);
       posts = result.items;
     }
     const isOwner = ctx.state.user?.id === id;
-    return { data: { profileUser: user, tab, posts, boards, isOwner } };
+    return { data: { profileUser: user, tab, posts, isOwner } };
   },
 });
 
 export default define.page<typeof handler>(function UserPage({ data }) {
-  const { profileUser, tab, posts, boards, isOwner } = data;
+  const { profileUser, tab, posts, isOwner } = data;
   return (
     <div style={{ padding: "var(--space-md) 0" }}>
       <div class="card">
@@ -69,7 +69,7 @@ export default define.page<typeof handler>(function UserPage({ data }) {
                 <div class="post-content-area">
                   <div class="post-title"><a href={`/post/${post.id}`}>{post.title}</a></div>
                   <div class="post-info">
-                    <span class="post-board-tag">{boards.find(b => b.slug === post.boardSlug)?.icon} {boards.find(b => b.slug === post.boardSlug)?.name}</span>
+                    <span class="post-board-tag">{getBoardBySlug(post.boardSlug)?.icon} {getBoardBySlug(post.boardSlug)?.name}</span>
                     <span class="post-time">{timeAgo(post.createdAt)}</span>
                     <span class="post-stats"><span>👍 {post.likeCount}</span></span>
                   </div>

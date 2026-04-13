@@ -40,8 +40,8 @@ app.use(async (ctx) => {
 
 app.use(staticFiles());
 
-// 版块初始化标记
-let boardsInitialized = false;
+// 版块初始化：模块加载时 fire-and-forget，不阻塞任何用户请求
+initBoards().catch((err) => console.error("版块初始化失败:", err));
 
 // 判断是否为静态资源请求（不需要 session 查询）
 function isStaticAsset(pathname: string): boolean {
@@ -61,21 +61,9 @@ function isStaticAsset(pathname: string): boolean {
 app.use(async (ctx) => {
   const { pathname } = new URL(ctx.req.url);
 
-  // 静态资源不需要 session 和版块初始化，直接跳过
+  // 静态资源不需要 session，直接跳过
   if (isStaticAsset(pathname)) {
     return ctx.next();
-  }
-
-  // 首次请求时初始化版块数据
-  if (!boardsInitialized) {
-    try {
-      await initBoards();
-      boardsInitialized = true;
-    } catch (err) {
-      console.error("版块初始化失败:", err);
-      // 即使初始化失败也标记完成，避免每次请求重试
-      boardsInitialized = true;
-    }
   }
 
   // P3: 使用带内存缓存的 getUserBySession，减少重复 KV 查询

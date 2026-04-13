@@ -2,6 +2,7 @@
 
 import { define } from "../../utils.ts";
 import { getKv } from "../../utils/db.ts";
+import { getPostsByIds } from "../../utils/posts.ts";
 import { timeAgo } from "../../utils/time.ts";
 import type { User, Post } from "../../utils/state.ts";
 
