@@ -8,36 +8,43 @@ import type { Post } from "../utils/state.ts";
 
 export const handler = define.handlers({
   async GET(ctx) {
-    const url = new URL(ctx.req.url);
-    const cursor = url.searchParams.get("cursor") || undefined;
-    const limit = 20;
+    try {
+      const url = new URL(ctx.req.url);
+      const cursor = url.searchParams.get("cursor") || undefined;
+      const limit = 20;
 
-    const boards = await getAllBoards();
-    const kv = await getKv();
-    const entries = kv.list<string>({ prefix: ["posts_latest"] }, {
-      limit: limit + 1,
-      cursor,
-    });
+      const boards = await getAllBoards();
+      const kv = await getKv();
+      const entries = kv.list<string>({ prefix: ["posts_latest"] }, {
+        limit: limit + 1,
+        cursor,
+      });
 
-    const postIds: string[] = [];
-    let nextCursor: string | undefined;
-    let count = 0;
+      const postIds: string[] = [];
+      let nextCursor: string | undefined;
+      let count = 0;
 
-    for await (const entry of entries) {
-      count++;
-      if (count > limit) break;
-      postIds.push(entry.value as string);
-      nextCursor = entries.cursor;
+      for await (const entry of entries) {
+        count++;
+        if (count > limit) break;
+        postIds.push(entry.value as string);
+        nextCursor = entries.cursor;
+      }
+
+      const hasMore = count > limit;
+      const posts: Post[] = [];
+      for (const id of postIds) {
+        const postEntry = await kv.get<Post>(["posts", id]);
+        if (postEntry.value) posts.push(postEntry.value);
+      }
+
+      return { data: { boards, posts, hasMore, nextCursor } };
+    } catch (err) {
+      console.error("首页数据加载失败:", err);
+      // 降级：返回空数据 + 静态版块列表
+      const { BOARDS } = await import("../utils/boards.ts");
+      return { data: { boards: BOARDS, posts: [] as Post[], hasMore: false, nextCursor: undefined } };
     }
-
-    const hasMore = count > limit;
-    const posts: Post[] = [];
-    for (const id of postIds) {
-      const postEntry = await kv.get<Post>(["posts", id]);
-      if (postEntry.value) posts.push(postEntry.value);
-    }
-
-    return { data: { boards, posts, hasMore, nextCursor } };
   },
 });
 

@@ -2569,7 +2569,7 @@ exports$1.propagation;
 var _trace = exports$1.trace;
 exports$1.default ?? exports$1;
 exports$1.__esModule;
-let BUILD_ID = "834a4f10f928e885fa6488dcf4426a959d7a2bdf";
+let BUILD_ID = "a508fc89befe4897e0456e9bd36be48e0eed9c00";
 const DENO_DEPLOYMENT_ID = void 0;
 function setBuildId(id) {
   BUILD_ID = id;
@@ -5987,20 +5987,27 @@ async function initBoards() {
 }
 async function getAllBoards() {
   const kv = await getKv();
-  const boards = [];
+  const boards2 = [];
   for (const board of BOARDS) {
     const entry = await kv.get(["boards", board.slug]);
     if (entry.value) {
-      boards.push(entry.value);
+      boards2.push(entry.value);
     }
   }
-  return boards;
+  return boards2;
 }
 async function getBoard(slug) {
   const kv = await getKv();
   const entry = await kv.get(["boards", slug]);
   return entry.value;
 }
+const boards = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  __proto__: null,
+  BOARDS,
+  getAllBoards,
+  getBoard,
+  initBoards
+}, Symbol.toStringTag, { value: "Module" }));
 const $$_tpl_2 = ['<span class="logo-icon">⚡</span><span>DeLinux</span>'];
 const $$_tpl_1$2 = ['<header class="header"><div class="header-inner">', '<nav class="nav-links">', "", '</nav><div class="header-actions">', '<button class="menu-toggle" id="menuToggle" aria-label="打开菜单">☰</button>', '</div></div></header><div class="mobile-nav" id="mobileNav"><ul class="mobile-nav-links"><li>', "</li>", '<li><div class="mobile-nav-divider"></div></li><li>', "</li>", '</ul></div><main class="container">', '</main><footer class="footer"><div class="container"><p>© 2026 DeLinux — AI + 生活社区 · 部署在 Deno Deploy 上</p></div></footer>', ""];
 const $$_tpl_3 = ["", "", "", "", ""];
@@ -6229,11 +6236,11 @@ const fsRoute_2 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePro
   handler,
   handlers
 }, Symbol.toStringTag, { value: "Module" }));
-const clientEntry = "./assets/client-entry-C8hD-emy.js";
-const version = "834a4f10f928e885fa6488dcf4426a959d7a2bdf";
+const clientEntry = "./assets/client-entry-Bq3Tqr7E.js";
+const version = "a508fc89befe4897e0456e9bd36be48e0eed9c00";
 const islands = /* @__PURE__ */ new Map();
 const staticFiles = /* @__PURE__ */ new Map([
-  ["/assets/client-entry-C8hD-emy.js", { "name": "/assets/client-entry-C8hD-emy.js", "hash": "f903bd175968b266fca4cbc555c03a2a7be55f8a1448059126e741ab4920e783", "filePath": "client/assets/client-entry-C8hD-emy.js", "contentType": "text/javascript; charset=UTF-8" }],
+  ["/assets/client-entry-Bq3Tqr7E.js", { "name": "/assets/client-entry-Bq3Tqr7E.js", "hash": "e8e274c56888b656ca330c28028d3fd7cab88413f328ef58a2d7cbc5f97671d9", "filePath": "client/assets/client-entry-Bq3Tqr7E.js", "contentType": "text/javascript; charset=UTF-8" }],
   ["/assets/client-entry-9Y5SOwNO.css", { "name": "/assets/client-entry-9Y5SOwNO.css", "hash": "0880757c3e4ab97e73bbe83d2aac21a9f04fea7194c60bf9a730863fa72b1d61", "filePath": "client/assets/client-entry-9Y5SOwNO.css", "contentType": "text/css; charset=UTF-8" }],
   ["/styles.css", { "name": "/styles.css", "hash": "ccadc8e40dba8f9f2ca251fd61e26beb2d2aac3ca138d691ded97d22782dfeb3", "filePath": "client/styles.css", "contentType": "text/css; charset=UTF-8" }]
 ]);
@@ -6242,7 +6249,7 @@ const fsRoutes = [
   { id: "/_app", mod: fsRoute_0, type: "app", pattern: "*", routePattern: "*" },
   { id: "/_500", mod: fsRoute_1, type: "error", pattern: "/", routePattern: "/" },
   { id: "/_404", mod: fsRoute_2, type: "notFound", pattern: "*", routePattern: "*" },
-  { id: "/index", mod: () => import("./assets/_fresh-route___index-DHeoSp8X.mjs"), type: "route", pattern: "/", routePattern: "/" },
+  { id: "/index", mod: () => import("./assets/_fresh-route___index-BVGwB-PX.mjs"), type: "route", pattern: "/", routePattern: "/" },
   { id: "/post/new", mod: () => import("./assets/_fresh-route___post_new-BiHjZdjQ.mjs"), type: "route", pattern: "/post/new", routePattern: "/post/new" },
   { id: "/post/[id]", mod: () => import("./assets/_fresh-route___post_id_-DG5_rZLn.mjs"), type: "route", pattern: "/post/:id", routePattern: "/post/:id" },
   { id: "/board/[slug]", mod: () => import("./assets/_fresh-route___board_slug_-uJ287wTa.mjs"), type: "route", pattern: "/board/:slug", routePattern: "/board/:slug" },
@@ -6255,7 +6262,8 @@ const fsRoutes = [
   { id: "/api/favorite", mod: () => import("./assets/_fresh-route___api_favorite-CbAX7mWn.mjs"), type: "route", pattern: "/api/favorite", routePattern: "/api/favorite" },
   { id: "/api/admin/delete-post", mod: () => import("./assets/_fresh-route___api_admin_delete_post-COko6I99.mjs"), type: "route", pattern: "/api/admin/delete-post", routePattern: "/api/admin/delete-post" },
   { id: "/api/admin/ban-user", mod: () => import("./assets/_fresh-route___api_admin_ban_user-CQLceJaN.mjs"), type: "route", pattern: "/api/admin/ban-user", routePattern: "/api/admin/ban-user" },
-  { id: "/api/like", mod: () => import("./assets/_fresh-route___api_like-C1_X6F-g.mjs"), type: "route", pattern: "/api/like", routePattern: "/api/like" }
+  { id: "/api/like", mod: () => import("./assets/_fresh-route___api_like-C1_X6F-g.mjs"), type: "route", pattern: "/api/like", routePattern: "/api/like" },
+  { id: "/api/health", mod: () => import("./assets/_fresh-route___api_health-B-V4cvYz.mjs"), type: "route", pattern: "/api/health", routePattern: "/api/health" }
 ];
 const snapshot = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
@@ -6461,20 +6469,29 @@ app.use(staticFiles$1());
 let boardsInitialized = false;
 app.use(async (ctx) => {
   if (!boardsInitialized) {
-    await initBoards();
-    boardsInitialized = true;
+    try {
+      await initBoards();
+      boardsInitialized = true;
+    } catch (err) {
+      console.error("版块初始化失败:", err);
+      boardsInitialized = true;
+    }
   }
-  const cookieHeader = ctx.req.headers.get("cookie");
-  const sessionId = getSessionIdFromCookie(cookieHeader);
-  if (sessionId) {
-    const session = await getSession(sessionId);
-    if (session) {
-      const user = await getUserById(session.userId);
-      if (user) {
-        ctx.state.user = user;
-        ctx.state.sessionId = sessionId;
+  try {
+    const cookieHeader = ctx.req.headers.get("cookie");
+    const sessionId = getSessionIdFromCookie(cookieHeader);
+    if (sessionId) {
+      const session = await getSession(sessionId);
+      if (session) {
+        const user = await getUserById(session.userId);
+        if (user) {
+          ctx.state.user = user;
+          ctx.state.sessionId = sessionId;
+        }
       }
     }
+  } catch (err) {
+    console.error("Session 中间件错误:", err);
   }
   return ctx.next();
 });
@@ -6512,6 +6529,7 @@ export {
   getUserById as m,
   generateId as n,
   invertTimestamp as o,
+  boards as p,
   registerStaticFile,
   s$2 as s,
   u$2 as u

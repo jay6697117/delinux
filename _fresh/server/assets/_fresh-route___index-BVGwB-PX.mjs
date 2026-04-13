@@ -8,40 +8,55 @@ const $$_tpl_5 = ['<li class="post-item" ', '><div class="post-meta-left"><span 
 const $$_tpl_6 = ['<div class="pagination">', "</div>"];
 const handler$1 = define.handlers({
   async GET(ctx) {
-    const url = new URL(ctx.req.url);
-    const cursor = url.searchParams.get("cursor") || void 0;
-    const limit = 20;
-    const boards = await getAllBoards();
-    const kv = await getKv();
-    const entries = kv.list({
-      prefix: ["posts_latest"]
-    }, {
-      limit: limit + 1,
-      cursor
-    });
-    const postIds = [];
-    let nextCursor;
-    let count = 0;
-    for await (const entry of entries) {
-      count++;
-      if (count > limit) break;
-      postIds.push(entry.value);
-      nextCursor = entries.cursor;
-    }
-    const hasMore = count > limit;
-    const posts = [];
-    for (const id of postIds) {
-      const postEntry = await kv.get(["posts", id]);
-      if (postEntry.value) posts.push(postEntry.value);
-    }
-    return {
-      data: {
-        boards,
-        posts,
-        hasMore,
-        nextCursor
+    try {
+      const url = new URL(ctx.req.url);
+      const cursor = url.searchParams.get("cursor") || void 0;
+      const limit = 20;
+      const boards = await getAllBoards();
+      const kv = await getKv();
+      const entries = kv.list({
+        prefix: ["posts_latest"]
+      }, {
+        limit: limit + 1,
+        cursor
+      });
+      const postIds = [];
+      let nextCursor;
+      let count = 0;
+      for await (const entry of entries) {
+        count++;
+        if (count > limit) break;
+        postIds.push(entry.value);
+        nextCursor = entries.cursor;
       }
-    };
+      const hasMore = count > limit;
+      const posts = [];
+      for (const id of postIds) {
+        const postEntry = await kv.get(["posts", id]);
+        if (postEntry.value) posts.push(postEntry.value);
+      }
+      return {
+        data: {
+          boards,
+          posts,
+          hasMore,
+          nextCursor
+        }
+      };
+    } catch (err) {
+      console.error("首页数据加载失败:", err);
+      const {
+        BOARDS
+      } = await import("../server-entry.mjs").then((n) => n.p);
+      return {
+        data: {
+          boards: BOARDS,
+          posts: [],
+          hasMore: false,
+          nextCursor: void 0
+        }
+      };
+    }
   }
 });
 const index = define.page(function Home({

@@ -49,6 +49,18 @@
       "_posts-CtOzPUAj.mjs"
     ]
   },
+  "fresh-route::_api_health": {
+    "file": "assets/_fresh-route___api_health-B-V4cvYz.mjs",
+    "name": "_fresh-route___api_health",
+    "src": "fresh-route::_api_health",
+    "isDynamicEntry": true,
+    "imports": [
+      "fresh:server_entry"
+    ],
+    "dynamicImports": [
+      "fresh:server_entry"
+    ]
+  },
   "fresh-route::_api_like": {
     "file": "assets/_fresh-route___api_like-C1_X6F-g.mjs",
     "name": "_fresh-route___api_like",
@@ -97,13 +109,16 @@
     ]
   },
   "fresh-route::_index": {
-    "file": "assets/_fresh-route___index-DHeoSp8X.mjs",
+    "file": "assets/_fresh-route___index-BVGwB-PX.mjs",
     "name": "_fresh-route___index",
     "src": "fresh-route::_index",
     "isDynamicEntry": true,
     "imports": [
       "fresh:server_entry",
       "_time-AqCAYVTU.mjs"
+    ],
+    "dynamicImports": [
+      "fresh:server_entry"
     ]
   },
   "fresh-route::_post_id_": {
@@ -154,6 +169,7 @@
     "name": "server-entry",
     "src": "fresh:server_entry",
     "isEntry": true,
+    "isDynamicEntry": true,
     "dynamicImports": [
       "fresh-route::_index",
       "fresh-route::_post_new",
@@ -168,7 +184,8 @@
       "fresh-route::_api_favorite",
       "fresh-route::_api_admin_delete_post",
       "fresh-route::_api_admin_ban_user",
-      "fresh-route::_api_like"
+      "fresh-route::_api_like",
+      "fresh-route::_api_health"
     ]
   }
 }
