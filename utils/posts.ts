@@ -156,7 +156,7 @@ export async function getReplies(
   }
 
   return {
-    items,
+    items: items.reverse(), // 最新回复排在上面
     cursor: count > limit ? nextCursor : undefined,
     hasMore: count > limit,
   };

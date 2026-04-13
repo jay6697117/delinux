@@ -90,7 +90,7 @@ export default define.page<typeof handler>(function PostDetail({ data, state }) 
             <div class="reply-header">
               <a href={`/user/${reply.authorId}`} class="reply-author">{reply.authorName}</a>
               <span class="reply-time">{timeAgo(reply.createdAt)}</span>
-              <span class="reply-floor">#{i + 1}</span>
+              <span class="reply-floor">#{replies.length - i}</span>
             </div>
             <div class="reply-content" dangerouslySetInnerHTML={{ __html: renderMarkdown(reply.content) }} />
           </div>
