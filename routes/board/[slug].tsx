@@ -1,7 +1,7 @@
 // 版块帖子列表页
 
 import { define } from "../../utils.ts";
-import { getBoard } from "../../utils/boards.ts";
+import { BOARDS } from "../../utils/boards.ts";
 import { getKv } from "../../utils/db.ts";
 import { timeAgo } from "../../utils/time.ts";
 import type { Post } from "../../utils/state.ts";
@@ -9,7 +9,8 @@ import type { Post } from "../../utils/state.ts";
 export const handler = define.handlers({
   async GET(ctx) {
     const { slug } = ctx.params;
-    const board = await getBoard(slug);
+    // 用静态常量查找版块，省掉 1 次 KV get
+    const board = BOARDS.find((b) => b.slug === slug);
     if (!board) return ctx.renderNotFound();
 
     const url = new URL(ctx.req.url);
@@ -27,11 +28,13 @@ export const handler = define.handlers({
       nextCursor = entries.cursor;
     }
     const hasMore = count > limit;
-    const posts: Post[] = [];
-    for (const id of postIds) {
-      const pe = await kv.get<Post>(["posts", id]);
-      if (pe.value) posts.push(pe.value);
-    }
+    // 并行查询所有帖子详情
+    const postEntries = await Promise.all(
+      postIds.map((id) => kv.get<Post>(["posts", id])),
+    );
+    const posts = postEntries
+      .filter((e) => e.value !== null)
+      .map((e) => e.value as Post);
     return { data: { board, posts, hasMore, nextCursor, slug } };
   },
 });

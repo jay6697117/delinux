@@ -1,7 +1,7 @@
 // 首页：版块导航 + 全站最新帖子列表
 
 import { define } from "../utils.ts";
-import { getAllBoards } from "../utils/boards.ts";
+import { BOARDS } from "../utils/boards.ts";
 import { getKv } from "../utils/db.ts";
 import { timeAgo } from "../utils/time.ts";
 import type { Post } from "../utils/state.ts";
@@ -13,7 +13,8 @@ export const handler = define.handlers({
       const cursor = url.searchParams.get("cursor") || undefined;
       const limit = 20;
 
-      const boards = await getAllBoards();
+      // P1a: 直接用静态常量，省掉 5 次 KV get
+      const boards = BOARDS;
       const kv = await getKv();
       const entries = kv.list<string>({ prefix: ["posts_latest"] }, {
         limit: limit + 1,
@@ -32,17 +33,19 @@ export const handler = define.handlers({
       }
 
       const hasMore = count > limit;
-      const posts: Post[] = [];
-      for (const id of postIds) {
-        const postEntry = await kv.get<Post>(["posts", id]);
-        if (postEntry.value) posts.push(postEntry.value);
-      }
+
+      // P1b: 并行查询所有帖子详情，替代串行 for loop
+      const postEntries = await Promise.all(
+        postIds.map((id) => kv.get<Post>(["posts", id])),
+      );
+      const posts = postEntries
+        .filter((e) => e.value !== null)
+        .map((e) => e.value as Post);
 
       return { data: { boards, posts, hasMore, nextCursor } };
     } catch (err) {
       console.error("首页数据加载失败:", err);
       // 降级：返回空数据 + 静态版块列表
-      const { BOARDS } = await import("../utils/boards.ts");
       return { data: { boards: BOARDS, posts: [] as Post[], hasMore: false, nextCursor: undefined } };
     }
   },
