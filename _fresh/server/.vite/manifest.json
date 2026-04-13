@@ -1,0 +1,174 @@
+{
+  "_posts-CtOzPUAj.mjs": {
+    "file": "assets/posts-CtOzPUAj.mjs",
+    "name": "posts",
+    "imports": [
+      "fresh:server_entry"
+    ]
+  },
+  "_time-AqCAYVTU.mjs": {
+    "file": "assets/time-AqCAYVTU.mjs",
+    "name": "time"
+  },
+  "fresh-route::_admin_index": {
+    "file": "assets/_fresh-route___admin_index-bfjiLU-R.mjs",
+    "name": "_fresh-route___admin_index",
+    "src": "fresh-route::_admin_index",
+    "isDynamicEntry": true,
+    "imports": [
+      "fresh:server_entry",
+      "_time-AqCAYVTU.mjs"
+    ]
+  },
+  "fresh-route::_api_admin_ban_user": {
+    "file": "assets/_fresh-route___api_admin_ban_user-CQLceJaN.mjs",
+    "name": "_fresh-route___api_admin_ban_user",
+    "src": "fresh-route::_api_admin_ban_user",
+    "isDynamicEntry": true,
+    "imports": [
+      "fresh:server_entry"
+    ]
+  },
+  "fresh-route::_api_admin_delete_post": {
+    "file": "assets/_fresh-route___api_admin_delete_post-COko6I99.mjs",
+    "name": "_fresh-route___api_admin_delete_post",
+    "src": "fresh-route::_api_admin_delete_post",
+    "isDynamicEntry": true,
+    "imports": [
+      "fresh:server_entry",
+      "_posts-CtOzPUAj.mjs"
+    ]
+  },
+  "fresh-route::_api_favorite": {
+    "file": "assets/_fresh-route___api_favorite-CbAX7mWn.mjs",
+    "name": "_fresh-route___api_favorite",
+    "src": "fresh-route::_api_favorite",
+    "isDynamicEntry": true,
+    "imports": [
+      "fresh:server_entry",
+      "_posts-CtOzPUAj.mjs"
+    ]
+  },
+  "fresh-route::_api_like": {
+    "file": "assets/_fresh-route___api_like-C1_X6F-g.mjs",
+    "name": "_fresh-route___api_like",
+    "src": "fresh-route::_api_like",
+    "isDynamicEntry": true,
+    "imports": [
+      "fresh:server_entry",
+      "_posts-CtOzPUAj.mjs"
+    ]
+  },
+  "fresh-route::_auth_login": {
+    "file": "assets/_fresh-route___auth_login-czvS3n3Y.mjs",
+    "name": "_fresh-route___auth_login",
+    "src": "fresh-route::_auth_login",
+    "isDynamicEntry": true,
+    "imports": [
+      "fresh:server_entry"
+    ]
+  },
+  "fresh-route::_auth_logout": {
+    "file": "assets/_fresh-route___auth_logout-BaJ_b8L9.mjs",
+    "name": "_fresh-route___auth_logout",
+    "src": "fresh-route::_auth_logout",
+    "isDynamicEntry": true,
+    "imports": [
+      "fresh:server_entry"
+    ]
+  },
+  "fresh-route::_auth_register": {
+    "file": "assets/_fresh-route___auth_register-Cospf7Ms.mjs",
+    "name": "_fresh-route___auth_register",
+    "src": "fresh-route::_auth_register",
+    "isDynamicEntry": true,
+    "imports": [
+      "fresh:server_entry"
+    ]
+  },
+  "fresh-route::_board_slug_": {
+    "file": "assets/_fresh-route___board_slug_-uJ287wTa.mjs",
+    "name": "_fresh-route___board_slug_",
+    "src": "fresh-route::_board_slug_",
+    "isDynamicEntry": true,
+    "imports": [
+      "fresh:server_entry",
+      "_time-AqCAYVTU.mjs"
+    ]
+  },
+  "fresh-route::_index": {
+    "file": "assets/_fresh-route___index-DHeoSp8X.mjs",
+    "name": "_fresh-route___index",
+    "src": "fresh-route::_index",
+    "isDynamicEntry": true,
+    "imports": [
+      "fresh:server_entry",
+      "_time-AqCAYVTU.mjs"
+    ]
+  },
+  "fresh-route::_post_id_": {
+    "file": "assets/_fresh-route___post_id_-DG5_rZLn.mjs",
+    "name": "_fresh-route___post_id_",
+    "src": "fresh-route::_post_id_",
+    "isDynamicEntry": true,
+    "imports": [
+      "fresh:server_entry",
+      "_posts-CtOzPUAj.mjs",
+      "_time-AqCAYVTU.mjs"
+    ]
+  },
+  "fresh-route::_post_new": {
+    "file": "assets/_fresh-route___post_new-BiHjZdjQ.mjs",
+    "name": "_fresh-route___post_new",
+    "src": "fresh-route::_post_new",
+    "isDynamicEntry": true,
+    "imports": [
+      "fresh:server_entry",
+      "_posts-CtOzPUAj.mjs"
+    ]
+  },
+  "fresh-route::_search": {
+    "file": "assets/_fresh-route___search-Bd8GoCGg.mjs",
+    "name": "_fresh-route___search",
+    "src": "fresh-route::_search",
+    "isDynamicEntry": true,
+    "imports": [
+      "fresh:server_entry",
+      "_posts-CtOzPUAj.mjs",
+      "_time-AqCAYVTU.mjs"
+    ]
+  },
+  "fresh-route::_user_id_": {
+    "file": "assets/_fresh-route___user_id_-CYbIWEFi.mjs",
+    "name": "_fresh-route___user_id_",
+    "src": "fresh-route::_user_id_",
+    "isDynamicEntry": true,
+    "imports": [
+      "fresh:server_entry",
+      "_posts-CtOzPUAj.mjs",
+      "_time-AqCAYVTU.mjs"
+    ]
+  },
+  "fresh:server_entry": {
+    "file": "server-entry.mjs",
+    "name": "server-entry",
+    "src": "fresh:server_entry",
+    "isEntry": true,
+    "dynamicImports": [
+      "fresh-route::_index",
+      "fresh-route::_post_new",
+      "fresh-route::_post_id_",
+      "fresh-route::_board_slug_",
+      "fresh-route::_auth_login",
+      "fresh-route::_auth_register",
+      "fresh-route::_auth_logout",
+      "fresh-route::_search",
+      "fresh-route::_admin_index",
+      "fresh-route::_user_id_",
+      "fresh-route::_api_favorite",
+      "fresh-route::_api_admin_delete_post",
+      "fresh-route::_api_admin_ban_user",
+      "fresh-route::_api_like"
+    ]
+  }
+}

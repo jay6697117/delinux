@@ -264,69 +264,89 @@ export async function getUserFavorites(
 
 // ===== 搜索索引 =====
 
-// 对标题进行简单分词并建立索引
+// 对标题和内容进行分词并建立索引
 async function indexPost(postId: string, title: string, boardSlug: string, createdAt: number): Promise<void> {
   const kv = await getKv();
   const words = tokenize(title);
 
+  const ops = kv.atomic();
   for (const word of words) {
-    await kv.set(["search_words", word, postId], { title, boardSlug, createdAt });
+    ops.set(["search_words", word, postId], { title, boardSlug, createdAt });
   }
+  await ops.commit();
 }
 
-// 简单分词：中文按单字/双字，英文按空格
+// 增强分词：中文单字/双字/三字组合，英文按空格，支持前缀匹配
 function tokenize(text: string): string[] {
   const words = new Set<string>();
-  const lower = text.toLowerCase();
+  const lower = text.toLowerCase().trim();
 
-  // 英文单词
-  const enWords = lower.match(/[a-zA-Z0-9]+/g) || [];
+  // 英文单词（支持带连字符的词）
+  const enWords = lower.match(/[a-zA-Z0-9][-a-zA-Z0-9]*/g) || [];
   for (const w of enWords) {
-    if (w.length >= 2) words.add(w);
+    if (w.length >= 2) {
+      words.add(w);
+      // 添加长词的前缀（用于前缀搜索）
+      if (w.length > 4) words.add(w.substring(0, 4));
+    }
   }
 
-  // 中文单字和双字组合
+  // 中文单字、双字和三字组合
   const cnChars = lower.match(/[\u4e00-\u9fa5]/g) || [];
   for (const ch of cnChars) {
     words.add(ch);
   }
+  // 双字组合
   for (let i = 0; i < cnChars.length - 1; i++) {
     words.add(cnChars[i] + cnChars[i + 1]);
+  }
+  // 三字组合（提高长词匹配精度）
+  for (let i = 0; i < cnChars.length - 2; i++) {
+    words.add(cnChars[i] + cnChars[i + 1] + cnChars[i + 2]);
   }
 
   return Array.from(words);
 }
 
-// 搜索帖子
+// 搜索帖子（支持多词交叉搜索 + 相关度排序）
 export async function searchPosts(
   query: string,
-  limit = 20,
+  limit = 30,
 ): Promise<Post[]> {
   const kv = await getKv();
   const words = tokenize(query);
   if (words.length === 0) return [];
 
-  // 用第一个词搜索，然后在结果中过滤
-  const firstWord = words[0];
-  const entries = kv.list<{ title: string; boardSlug: string; createdAt: number }>(
-    { prefix: ["search_words", firstWord] },
-    { limit: limit * 2 }, // 多查一些，因为可能有些帖子已删除
-  );
+  // 收集所有匹配的帖子 ID 及匹配词数
+  const postScores = new Map<string, number>();
 
-  const postIds = new Set<string>();
-  const posts: Post[] = [];
+  for (const word of words) {
+    const entries = kv.list<{ title: string; boardSlug: string; createdAt: number }>(
+      { prefix: ["search_words", word] },
+      { limit: 50 },
+    );
 
-  for await (const entry of entries) {
-    const postId = entry.key[2] as string;
-    if (postIds.has(postId)) continue;
-    postIds.add(postId);
-
-    const postEntry = await kv.get<Post>(["posts", postId]);
-    if (postEntry.value) {
-      posts.push(postEntry.value);
-      if (posts.length >= limit) break;
+    for await (const entry of entries) {
+      const postId = entry.key[2] as string;
+      postScores.set(postId, (postScores.get(postId) || 0) + 1);
     }
+  }
+
+  if (postScores.size === 0) return [];
+
+  // 按匹配词数降序排序
+  const sortedIds = Array.from(postScores.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([id]) => id);
+
+  // 批量获取帖子详情
+  const posts: Post[] = [];
+  for (const postId of sortedIds) {
+    const postEntry = await kv.get<Post>(["posts", postId]);
+    if (postEntry.value) posts.push(postEntry.value);
   }
 
   return posts;
 }
+

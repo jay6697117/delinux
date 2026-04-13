@@ -1,6 +1,7 @@
 // 全局布局
 
 import { define } from "../utils.ts";
+import { BOARDS } from "../utils/boards.ts";
 
 export default define.page(function App({ Component, state, url }) {
   const user = state?.user;
@@ -28,25 +29,27 @@ export default define.page(function App({ Component, state, url }) {
               <a href="/" class={`nav-link ${currentPath === "/" ? "active" : ""}`}>
                 首页
               </a>
-              <a href="/board/ai" class={`nav-link ${currentPath.startsWith("/board/ai") ? "active" : ""}`}>
-                🤖 AI
-              </a>
-              <a href="/board/chill" class={`nav-link ${currentPath.startsWith("/board/chill") ? "active" : ""}`}>
-                🐟 摸鱼
-              </a>
-              <a href="/board/deals" class={`nav-link ${currentPath.startsWith("/board/deals") ? "active" : ""}`}>
-                🐑 羊毛
-              </a>
-              <a href="/board/share" class={`nav-link ${currentPath.startsWith("/board/share") ? "active" : ""}`}>
-                📢 分享
-              </a>
-              <a href="/board/team" class={`nav-link ${currentPath.startsWith("/board/team") ? "active" : ""}`}>
-                🤝 组队
-              </a>
+              {BOARDS.map((board) => (
+                <a
+                  href={`/board/${board.slug}`}
+                  class={`nav-link ${currentPath.startsWith(`/board/${board.slug}`) ? "active" : ""}`}
+                  key={board.slug}
+                >
+                  {board.icon} {board.name}
+                </a>
+              ))}
             </nav>
 
             <div class="header-actions">
               <a href="/search" class="btn btn-ghost btn-icon" title="搜索">🔍</a>
+              {/* 汉堡菜单按钮（移动端显示） */}
+              <button
+                class="menu-toggle"
+                id="menuToggle"
+                aria-label="打开菜单"
+              >
+                ☰
+              </button>
               {user ? (
                 <>
                   <a href="/post/new" class="btn btn-primary">发帖</a>
@@ -66,6 +69,73 @@ export default define.page(function App({ Component, state, url }) {
           </div>
         </header>
 
+        {/* 移动端导航抽屉 */}
+        <div class="mobile-nav" id="mobileNav">
+          <ul class="mobile-nav-links">
+            <li>
+              <a href="/" class={`mobile-nav-link ${currentPath === "/" ? "active" : ""}`}>
+                🏠 首页
+              </a>
+            </li>
+            {BOARDS.map((board) => (
+              <li key={board.slug}>
+                <a
+                  href={`/board/${board.slug}`}
+                  class={`mobile-nav-link ${currentPath.startsWith(`/board/${board.slug}`) ? "active" : ""}`}
+                >
+                  {board.icon} {board.name}
+                </a>
+              </li>
+            ))}
+            <li><div class="mobile-nav-divider" /></li>
+            <li>
+              <a href="/search" class={`mobile-nav-link ${currentPath === "/search" ? "active" : ""}`}>
+                🔍 搜索
+              </a>
+            </li>
+            {user ? (
+              <>
+                <li>
+                  <a href="/post/new" class={`mobile-nav-link ${currentPath === "/post/new" ? "active" : ""}`}>
+                    ✍️ 发帖
+                  </a>
+                </li>
+                <li>
+                  <a href={`/user/${user.id}`} class="mobile-nav-link">
+                    👤 {user.username}
+                  </a>
+                </li>
+                {user.role === "admin" && (
+                  <li>
+                    <a href="/admin" class="mobile-nav-link">
+                      🛡️ 管理后台
+                    </a>
+                  </li>
+                )}
+                <li><div class="mobile-nav-divider" /></li>
+                <li>
+                  <a href="/auth/logout" class="mobile-nav-link">
+                    🚪 登出
+                  </a>
+                </li>
+              </>
+            ) : (
+              <>
+                <li>
+                  <a href="/auth/login" class="mobile-nav-link">
+                    🔑 登录
+                  </a>
+                </li>
+                <li>
+                  <a href="/auth/register" class="mobile-nav-link">
+                    📝 注册
+                  </a>
+                </li>
+              </>
+            )}
+          </ul>
+        </div>
+
         {/* 页面内容 */}
         <main class="container">
           <Component />
@@ -77,6 +147,27 @@ export default define.page(function App({ Component, state, url }) {
             <p>© 2026 DeLinux — AI + 生活社区 · 部署在 Deno Deploy 上</p>
           </div>
         </footer>
+
+        {/* 汉堡菜单脚本 */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            var btn = document.getElementById('menuToggle');
+            var nav = document.getElementById('mobileNav');
+            if (!btn || !nav) return;
+            btn.addEventListener('click', function() {
+              var isOpen = nav.classList.toggle('open');
+              btn.textContent = isOpen ? '✕' : '☰';
+              btn.setAttribute('aria-label', isOpen ? '关闭菜单' : '打开菜单');
+            });
+            // 点击导航链接后自动关闭菜单
+            nav.querySelectorAll('a').forEach(function(a) {
+              a.addEventListener('click', function() {
+                nav.classList.remove('open');
+                btn.textContent = '☰';
+              });
+            });
+          })();
+        `}} />
       </body>
     </html>
   );

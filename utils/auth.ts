@@ -32,12 +32,21 @@ export async function createUser(
   const passwordHash = await hashPassword(password);
   const now = Date.now();
 
+  // 检查是否为首个用户，首个用户自动成为管理员
+  let isFirstUser = false;
+  const firstCheck = kv.list({ prefix: ["users"] }, { limit: 1 });
+  let hasUsers = false;
+  for await (const _ of firstCheck) { hasUsers = true; break; }
+  if (!hasUsers) isFirstUser = true;
+
+  const role = isFirstUser ? "admin" : "user";
+
   const user: User = {
     id,
     username,
     email: email.toLowerCase(),
     passwordHash,
-    role: "user",
+    role,
     createdAt: now,
     banned: false,
   };
@@ -57,7 +66,7 @@ export async function createUser(
 
   return {
     ok: true,
-    user: { id, username, role: "user", createdAt: now, banned: false },
+    user: { id, username, role, createdAt: now, banned: false },
   };
 }
 
@@ -104,6 +113,27 @@ export async function getUserById(id: string): Promise<UserPublic | null> {
 
   const { passwordHash: _, email: _e, ...pub } = entry.value;
   return pub;
+}
+
+// 获取所有用户（管理员用）
+export async function getAllUsers(): Promise<User[]> {
+  const kv = await getKv();
+  const entries = kv.list<User>({ prefix: ["users"] }, { limit: 500 });
+  const users: User[] = [];
+  for await (const entry of entries) {
+    users.push(entry.value);
+  }
+  return users;
+}
+
+// 设置用户角色
+export async function setUserRole(userId: string, role: "user" | "admin"): Promise<boolean> {
+  const kv = await getKv();
+  const entry = await kv.get<User>(["users", userId]);
+  if (!entry.value) return false;
+  const updated = { ...entry.value, role };
+  await kv.set(["users", userId], updated);
+  return true;
 }
 
 // ===== Session 操作 =====

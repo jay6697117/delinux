@@ -3,8 +3,9 @@
   "tasks": {
     "check": "deno fmt --check . && deno lint . && deno check",
     "dev": "deno run -A --unstable-kv npm:vite",
-    "build": "vite build",
-    "start": "deno serve -A _fresh/server.js",
+    "build": "deno run -A --unstable-kv npm:vite build",
+    "start": "deno serve -A --unstable-kv _fresh/server.js",
+    "set-admin": "deno run -A --unstable-kv scripts/set-admin.ts",
     "update": "deno run -A -r jsr:@fresh/update ."
   },
   "lint": {
