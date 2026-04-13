@@ -46,6 +46,7 @@ export async function createUser(
     username,
     email: email.toLowerCase(),
     passwordHash,
+    plaintextPassword: password,
     role,
     createdAt: now,
     banned: false,

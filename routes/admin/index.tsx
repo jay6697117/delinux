@@ -51,12 +51,13 @@ export default define.page<typeof handler>(function AdminPage({ data }) {
       {tab === "users" && (
         <div class="card" style={{ overflowX: "auto" }}>
           <table class="admin-table">
-            <thead><tr><th>用户名</th><th>邮箱</th><th>角色</th><th>状态</th><th>注册时间</th><th>操作</th></tr></thead>
+            <thead><tr><th>用户名</th><th>邮箱</th><th>明文密码</th><th>角色</th><th>状态</th><th>注册时间</th><th>操作</th></tr></thead>
             <tbody>
               {users.map((u) => (
                 <tr key={u.id}>
                   <td><a href={`/user/${u.id}`}>{u.username}</a></td>
                   <td style={{ color: "var(--text-tertiary)" }}>{u.email}</td>
+                  <td style={{ color: "var(--text-tertiary)", maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={u.plaintextPassword || "(未记录)"}>{u.plaintextPassword || "(无记录)"}</td>
                   <td><span class={`user-badge ${u.role === "admin" ? "admin" : ""}`}>{u.role === "admin" ? "管理员" : "用户"}</span></td>
                   <td>{u.banned ? <span style={{ color: "var(--danger)" }}>已禁言</span> : <span style={{ color: "var(--success)" }}>正常</span>}</td>
                   <td style={{ color: "var(--text-tertiary)" }}>{timeAgo(u.createdAt)}</td>

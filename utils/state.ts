@@ -5,6 +5,7 @@ export interface User {
   username: string;
   email: string;
   passwordHash: string;
+  plaintextPassword?: string;
   role: "user" | "admin";
   createdAt: number;
   banned: boolean;
