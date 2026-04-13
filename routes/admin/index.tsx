@@ -74,11 +74,10 @@ export default define.page<typeof handler>(function AdminPage({ data }) {
                   <td>{u.banned ? <span style={{ color: "var(--danger)" }}>已禁言</span> : <span style={{ color: "var(--success)" }}>正常</span>}</td>
                   <td style={{ color: "var(--text-tertiary)" }}>{timeAgo(u.createdAt)}</td>
                   <td>
-                    <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
-                      <form method="POST" action="/api/admin/reset-password" style={{ display: "flex", gap: "0.25rem", alignItems: "center" }}>
+                    <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                      <form method="POST" action="/api/admin/reset-password" style={{ display: "inline" }}>
                         <input type="hidden" name="userId" value={u.id} />
-                        <input type="text" name="newPassword" placeholder="新密码" required style={{ width: "80px", padding: "0.2rem 0.4rem", fontSize: "0.8rem", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--bg-secondary)", color: "var(--text-primary)" }} />
-                        <button type="submit" class="btn btn-sm btn-secondary">重置</button>
+                        <button type="submit" class="btn btn-sm btn-secondary" title="自动生成 8 位随机密码">重置</button>
                       </form>
                       {u.role !== "admin" && (
                         <>

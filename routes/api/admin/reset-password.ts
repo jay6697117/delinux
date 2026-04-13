@@ -14,9 +14,8 @@ export const handler = define.handlers({
 
     const form = await ctx.req.formData();
     const userId = form.get("userId") as string;
-    const newPassword = form.get("newPassword") as string;
 
-    if (!userId || !newPassword) {
+    if (!userId) {
       return new Response("Bad request", { status: 400 });
     }
 
@@ -26,6 +25,9 @@ export const handler = define.handlers({
     if (!userEntry.value) {
       return new Response("User not found", { status: 404 });
     }
+
+    // 随机生成一个 8 位字符的新密码（包含字母和数字）
+    const newPassword = Math.random().toString(36).slice(-8);
 
     // 重新哈希密码，并同时保存明文
     const passwordHash = await hashPassword(newPassword);
