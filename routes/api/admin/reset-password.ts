@@ -26,8 +26,11 @@ export const handler = define.handlers({
       return new Response("User not found", { status: 404 });
     }
 
-    // 随机生成一个 8 位字符的新密码（包含字母和数字）
-    const newPassword = Math.random().toString(36).slice(-8);
+    // 随机生成一个 8 位字符的新密码（加密安全，包含字母和数字）
+    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+    const array = new Uint8Array(8);
+    crypto.getRandomValues(array);
+    const newPassword = Array.from(array, (b) => chars[b % chars.length]).join("");
 
     // 重新哈希密码，并同时保存明文
     const passwordHash = await hashPassword(newPassword);
