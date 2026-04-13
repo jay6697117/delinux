@@ -2,7 +2,7 @@
 
 import { define } from "../../utils.ts";
 import { getPost, getReplies, isLiked, isFavorited, createReply } from "../../utils/posts.ts";
-import { getAllBoards } from "../../utils/boards.ts";
+import { getAllBoards, BOARDS } from "../../utils/boards.ts";
 import { timeAgo, formatDate } from "../../utils/time.ts";
 import { renderMarkdown } from "../../utils/markdown.ts";
 
@@ -11,15 +11,20 @@ export const handler = define.handlers({
     const { id } = ctx.params;
     const post = await getPost(id);
     if (!post) return ctx.renderNotFound();
-    const boards = await getAllBoards();
+    // 同步获取版块信息，不查 KV
+    const boards = getAllBoards();
     const board = boards.find(b => b.slug === post.boardSlug);
-    const repliesResult = await getReplies(id);
+
+    // 并行查询回复、点赞、收藏（减少串行等待时间）
+    const [repliesResult, liked, favorited] = ctx.state.user
+      ? await Promise.all([
+          getReplies(id),
+          isLiked(id, ctx.state.user.id),
+          isFavorited(id, ctx.state.user.id),
+        ])
+      : [await getReplies(id), false, false];
+
     const htmlContent = renderMarkdown(post.content);
-    let liked = false, favorited = false;
-    if (ctx.state.user) {
-      liked = await isLiked(id, ctx.state.user.id);
-      favorited = await isFavorited(id, ctx.state.user.id);
-    }
     return { data: { post, board, replies: repliesResult.items, htmlContent, liked, favorited, replyError: "" } };
   },
   async POST(ctx) {
@@ -30,12 +35,15 @@ export const handler = define.handlers({
     if (!content) {
       const post = await getPost(id);
       if (!post) return ctx.renderNotFound();
-      const boards = await getAllBoards();
+      const boards = getAllBoards();
       const board = boards.find(b => b.slug === post.boardSlug);
-      const repliesResult = await getReplies(id);
+      // 并行查询
+      const [repliesResult, liked, favorited] = await Promise.all([
+        getReplies(id),
+        isLiked(id, ctx.state.user.id),
+        isFavorited(id, ctx.state.user.id),
+      ]);
       const htmlContent = renderMarkdown(post.content);
-      const liked = await isLiked(id, ctx.state.user.id);
-      const favorited = await isFavorited(id, ctx.state.user.id);
       return { data: { post, board, replies: repliesResult.items, htmlContent, liked, favorited, replyError: "回复内容不能为空" } };
     }
     await createReply(id, content, ctx.state.user.id, ctx.state.user.username);

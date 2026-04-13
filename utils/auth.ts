@@ -195,3 +195,42 @@ export function createSessionCookie(sessionId: string): string {
 export function clearSessionCookie(): string {
   return `session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
 }
+
+// ===== Session 内存缓存（减少重复 KV 查询） =====
+
+const sessionCache = new Map<string, { user: UserPublic; expAt: number }>();
+const SESSION_CACHE_TTL = 5 * 60 * 1000; // 5 分钟
+
+// 通过 sessionId 获取用户（带内存缓存）
+export async function getUserBySession(sessionId: string): Promise<UserPublic | null> {
+  // 先查内存缓存
+  const cached = sessionCache.get(sessionId);
+  if (cached && cached.expAt > Date.now()) {
+    return cached.user;
+  }
+
+  // 未命中缓存，查 KV
+  const session = await getSession(sessionId);
+  if (!session) {
+    sessionCache.delete(sessionId);
+    return null;
+  }
+
+  const user = await getUserById(session.userId);
+  if (user) {
+    sessionCache.set(sessionId, { user, expAt: Date.now() + SESSION_CACHE_TTL });
+    // 防止内存泄漏，超过 1000 条时清理过期条目
+    if (sessionCache.size > 1000) {
+      const now = Date.now();
+      for (const [k, v] of sessionCache) {
+        if (v.expAt < now) sessionCache.delete(k);
+      }
+    }
+  }
+  return user;
+}
+
+// 登出时清除缓存
+export function clearSessionCache(sessionId: string): void {
+  sessionCache.delete(sessionId);
+}

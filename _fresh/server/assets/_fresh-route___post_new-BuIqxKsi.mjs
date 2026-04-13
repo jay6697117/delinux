@@ -1,5 +1,5 @@
 import { d as define, a, l, s, B as BOARDS } from "../server-entry.mjs";
-import { c as createPost } from "./posts-CtOzPUAj.mjs";
+import { c as createPost } from "./posts-DS_gLNFV.mjs";
 const $$_tpl_1 = ['<div class="auth-page"><div class="card" ', '><div class="card-body"><h1 class="auth-title">✍️ 发帖</h1>', '<form method="POST"><div class="form-group"><label class="form-label" for="board">选择版块</label><select class="form-input" id="board" name="board" required><option value="">-- 请选择 --</option>', '</select></div><div class="form-group"><label class="form-label" for="title">标题</label><input class="form-input" type="text" id="title" name="title" ', ' placeholder="一句话概括你想说的" required autofocus></div><div class="form-group"><label class="form-label" for="content">内容</label><textarea class="form-input" id="content" name="content" placeholder="支持 Markdown 格式" required>', '</textarea><p class="form-hint">支持 Markdown 语法：**粗体**、*斜体*、`代码`、&gt; 引用、- 列表</p></div><button type="submit" class="btn btn-primary" ', ">发布帖子</button></form></div></div></div>"];
 const $$_tpl_2 = ['<div class="alert alert-error">', "</div>"];
 const $$_tpl_3 = ["<option ", " ", ">", " ", "</option>"];

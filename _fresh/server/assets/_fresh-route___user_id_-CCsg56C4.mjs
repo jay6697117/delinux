@@ -1,5 +1,5 @@
-import { d as define, a, s, l, u, m as getUserById, g as getAllBoards, b as getKv } from "../server-entry.mjs";
-import { e as getUserFavorites } from "./posts-CtOzPUAj.mjs";
+import { d as define, a, s, l, u, m as getUserById, b as getAllBoards, g as getKv } from "../server-entry.mjs";
+import { e as getUserFavorites } from "./posts-DS_gLNFV.mjs";
 import { t as timeAgo } from "./time-AqCAYVTU.mjs";
 const $$_tpl_1 = ["<div ", '><div class="card"><div class="user-header"><div class="user-avatar">', '</div><div class="user-info"><h1>', "", "", "</h1><p>加入于 ", '</p></div></div></div><div class="tabs" ', ">", "", '</div><div class="card">', "</div></div>"];
 const $$_tpl_2 = ['<span class="user-badge admin" ', ">管理员</span>"];

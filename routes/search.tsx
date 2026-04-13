@@ -9,7 +9,7 @@ export const handler = define.handlers({
   async GET(ctx) {
     const url = new URL(ctx.req.url);
     const query = url.searchParams.get("q") || "";
-    const boards = await getAllBoards();
+    const boards = getAllBoards();
     const posts = query ? await searchPosts(query) : [];
     return { data: { query, boards, posts } };
   },

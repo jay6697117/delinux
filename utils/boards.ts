@@ -53,17 +53,9 @@ export async function initBoards(): Promise<void> {
   }
 }
 
-// 获取所有版块
-export async function getAllBoards(): Promise<Board[]> {
-  const kv = await getKv();
-  const boards: Board[] = [];
-  for (const board of BOARDS) {
-    const entry = await kv.get<Board>(["boards", board.slug]);
-    if (entry.value) {
-      boards.push(entry.value);
-    }
-  }
-  return boards;
+// 获取所有版块（直接返回静态常量，避免无意义的 KV 查询）
+export function getAllBoards(): Board[] {
+  return BOARDS;
 }
 
 // 获取单个版块

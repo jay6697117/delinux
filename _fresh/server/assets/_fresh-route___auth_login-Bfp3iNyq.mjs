@@ -1,4 +1,4 @@
-import { d as define, a, u, l, s, e as loginUser, f as createSession, h as createSessionCookie } from "../server-entry.mjs";
+import { d as define, a, u, l, s, c as loginUser, e as createSession, f as createSessionCookie } from "../server-entry.mjs";
 const $$_tpl_1 = ['<div class="auth-page"><div class="auth-card card"><div class="card-body"><h1 class="auth-title">登录 DeLinux</h1>', '<form method="POST"><div class="form-group"><label class="form-label" for="email">邮箱</label><input class="form-input" type="email" id="email" name="email" ', ' placeholder="your@email.com" required autofocus></div><div class="form-group"><label class="form-label" for="password">密码</label><input class="form-input" type="password" id="password" name="password" placeholder="输入密码" required></div><button type="submit" class="btn btn-primary" ', '>登录</button></form><p class="auth-footer">没有账号？', "</p></div></div></div>"];
 const $$_tpl_2 = ['<div class="alert alert-error">', "</div>"];
 const handler$1 = define.handlers({

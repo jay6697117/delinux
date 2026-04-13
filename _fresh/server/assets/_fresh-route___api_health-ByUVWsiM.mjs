@@ -29,7 +29,7 @@ const handler$1 = define.handlers({
       const {
         getAllBoards,
         BOARDS
-      } = await import("../server-entry.mjs").then((n) => n.p);
+      } = await import("../server-entry.mjs").then((n) => n.q);
       const boards = await getAllBoards();
       diagnostics.boards = {
         status: "ok",

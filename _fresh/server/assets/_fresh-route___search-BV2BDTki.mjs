@@ -1,5 +1,5 @@
-import { d as define, a, s, l, u, g as getAllBoards } from "../server-entry.mjs";
-import { s as searchPosts } from "./posts-CtOzPUAj.mjs";
+import { d as define, a, s, l, u, b as getAllBoards } from "../server-entry.mjs";
+import { s as searchPosts } from "./posts-DS_gLNFV.mjs";
 import { t as timeAgo } from "./time-AqCAYVTU.mjs";
 const $$_tpl_1 = ["<div ", '><h1 class="page-title" ', '>🔍 搜索</h1><form method="GET" class="search-bar"><input class="form-input" type="text" name="q" ', ' placeholder="搜索帖子标题..." autofocus><button type="submit" class="btn btn-primary">搜索</button></form>', "</div>"];
 const $$_tpl_2 = ['<div class="card"><div class="card-header">搜索 &quot;', "&quot; 的结果 (", ")</div>", "</div>"];
@@ -10,7 +10,7 @@ const handler$1 = define.handlers({
   async GET(ctx) {
     const url = new URL(ctx.req.url);
     const query = url.searchParams.get("q") || "";
-    const boards = await getAllBoards();
+    const boards = getAllBoards();
     const posts = query ? await searchPosts(query) : [];
     return {
       data: {

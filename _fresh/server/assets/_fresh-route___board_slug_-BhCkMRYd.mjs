@@ -1,4 +1,4 @@
-import { d as define, a, s, u, l, c as getBoard, b as getKv } from "../server-entry.mjs";
+import { d as define, a, s, u, l, B as BOARDS, g as getKv } from "../server-entry.mjs";
 import { t as timeAgo } from "./time-AqCAYVTU.mjs";
 const $$_tpl_1 = ['<div><div class="page-header"><h1 class="page-title">', " ", " — ", "</h1>", '</div><div class="card">', "", "</div></div>"];
 const $$_tpl_2 = ['<div class="empty-state"><div class="empty-state-icon">', '</div><p class="empty-state-text">这个版块还没有帖子</p></div>'];
@@ -10,7 +10,7 @@ const handler$1 = define.handlers({
     const {
       slug
     } = ctx.params;
-    const board = await getBoard(slug);
+    const board = BOARDS.find((b) => b.slug === slug);
     if (!board) return ctx.renderNotFound();
     const url = new URL(ctx.req.url);
     const cursor = url.searchParams.get("cursor") || void 0;
@@ -32,11 +32,8 @@ const handler$1 = define.handlers({
       nextCursor = entries.cursor;
     }
     const hasMore = count > limit;
-    const posts = [];
-    for (const id of postIds) {
-      const pe = await kv.get(["posts", id]);
-      if (pe.value) posts.push(pe.value);
-    }
+    const postEntries = await Promise.all(postIds.map((id) => kv.get(["posts", id])));
+    const posts = postEntries.filter((e) => e.value !== null).map((e) => e.value);
     return {
       data: {
         board,

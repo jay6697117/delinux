@@ -2569,7 +2569,7 @@ exports$1.propagation;
 var _trace = exports$1.trace;
 exports$1.default ?? exports$1;
 exports$1.__esModule;
-let BUILD_ID = "a508fc89befe4897e0456e9bd36be48e0eed9c00";
+let BUILD_ID = "9285027a599072c119ae5473cec640d3a54b8636";
 const DENO_DEPLOYMENT_ID = void 0;
 function setBuildId(id) {
   BUILD_ID = id;
@@ -5934,7 +5934,8 @@ const define = createDefine();
 let _kv = null;
 async function getKv() {
   if (!_kv) {
-    _kv = await Deno.openKv();
+    const isDeploy = Deno.env.get("DENO_DEPLOYMENT_ID") !== void 0;
+    _kv = await Deno.openKv(isDeploy ? void 0 : "./local.sqlite");
   }
   return _kv;
 }
@@ -5985,16 +5986,8 @@ async function initBoards() {
     }
   }
 }
-async function getAllBoards() {
-  const kv = await getKv();
-  const boards2 = [];
-  for (const board of BOARDS) {
-    const entry = await kv.get(["boards", board.slug]);
-    if (entry.value) {
-      boards2.push(entry.value);
-    }
-  }
-  return boards2;
+function getAllBoards() {
+  return BOARDS;
 }
 async function getBoard(slug) {
   const kv = await getKv();
@@ -6009,7 +6002,7 @@ const boards = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProper
   initBoards
 }, Symbol.toStringTag, { value: "Module" }));
 const $$_tpl_2 = ['<span class="logo-icon">⚡</span><span>DeLinux</span>'];
-const $$_tpl_1$2 = ['<header class="header"><div class="header-inner">', '<nav class="nav-links">', "", '</nav><div class="header-actions">', '<button class="menu-toggle" id="menuToggle" aria-label="打开菜单">☰</button>', '</div></div></header><div class="mobile-nav" id="mobileNav"><ul class="mobile-nav-links"><li>', "</li>", '<li><div class="mobile-nav-divider"></div></li><li>', "</li>", '</ul></div><main class="container">', '</main><footer class="footer"><div class="container"><p>© 2026 DeLinux — AI + 生活社区 · 部署在 Deno Deploy 上</p></div></footer>', ""];
+const $$_tpl_1$2 = ['<header class="header"><div class="header-inner">', '<nav class="nav-links">', "", '</nav><div class="header-actions">', '<button class="menu-toggle" id="menuToggle" aria-label="打开菜单">☰</button>', '</div></div></header><div class="mobile-nav" id="mobileNav"><ul class="mobile-nav-links"><li>', "</li>", '<li><div class="mobile-nav-divider"></div></li><li>', "</li>", '</ul></div><main class="container">', '</main><footer class="footer"><div class="container"><p>© 2026 DeLinux — AI + 生活社区 · 部署在 Deno Deploy 上</p></div></footer>', "", ""];
 const $$_tpl_3 = ["", "", "", "", ""];
 const $$_tpl_4 = ["", "", ""];
 const $$_tpl_5 = ["<li ", ">", "</li>"];
@@ -6039,6 +6032,9 @@ const _app = define.page(function App2({
       }), u$2("link", {
         rel: "stylesheet",
         href: "/styles.css"
+      }), u$2("link", {
+        rel: "icon",
+        href: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>"
       })]
     }), u$2("body", {
       children: a$2($$_tpl_1$2, u$2("a", {
@@ -6140,6 +6136,81 @@ const _app = define.page(function App2({
           })();
         `
         }
+      }), u$2("script", {
+        dangerouslySetInnerHTML: {
+          __html: `
+          (function() {
+            // 创建进度条 DOM
+            var bar = document.createElement('div');
+            bar.id = 'nprogress-bar';
+            var s = bar.style;
+            s.position = 'fixed';
+            s.top = '0';
+            s.left = '0';
+            s.width = '0';
+            s.height = '2.5px';
+            s.background = 'linear-gradient(90deg, #58a6ff, #79c0ff, #a5d6ff)';
+            s.zIndex = '99999';
+            s.transition = 'width 0.4s ease, opacity 0.3s ease';
+            s.boxShadow = '0 0 8px rgba(88,166,255,0.6)';
+            s.opacity = '0';
+            s.pointerEvents = 'none';
+            document.body.appendChild(bar);
+
+            var rafId = null;
+            var progress = 0;
+
+            function start() {
+              progress = 0;
+              bar.style.opacity = '1';
+              bar.style.width = '0';
+              // 用 requestAnimationFrame 平滑递增
+              function tick() {
+                if (progress < 30) progress += 3;
+                else if (progress < 60) progress += 1.5;
+                else if (progress < 85) progress += 0.5;
+                bar.style.width = progress + '%';
+                if (progress < 85) rafId = requestAnimationFrame(tick);
+              }
+              rafId = requestAnimationFrame(tick);
+            }
+
+            function done() {
+              if (rafId) cancelAnimationFrame(rafId);
+              bar.style.width = '100%';
+              setTimeout(function() {
+                bar.style.opacity = '0';
+                setTimeout(function() { bar.style.width = '0'; }, 300);
+              }, 200);
+            }
+
+            // 监听所有内部链接点击
+            document.addEventListener('click', function(e) {
+              var a = e.target.closest('a');
+              if (!a) return;
+              var href = a.getAttribute('href');
+              if (!href) return;
+              // 跳过外链、锚点、新窗口、特殊协议
+              if (href.startsWith('http') || href.startsWith('#') || href.startsWith('data:') || href.startsWith('javascript:')) return;
+              if (a.target === '_blank') return;
+              start();
+            });
+
+            // 表单提交也显示进度条
+            document.addEventListener('submit', function() { start(); });
+
+            // 页面卸载前加速到 90%
+            window.addEventListener('beforeunload', function() {
+              if (rafId) cancelAnimationFrame(rafId);
+              progress = 90;
+              bar.style.width = '90%';
+            });
+
+            // 页面完全加载后完成
+            window.addEventListener('pageshow', function() { done(); });
+          })();
+        `
+        }
       }))
     })]
   });
@@ -6236,11 +6307,11 @@ const fsRoute_2 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePro
   handler,
   handlers
 }, Symbol.toStringTag, { value: "Module" }));
-const clientEntry = "./assets/client-entry-Bq3Tqr7E.js";
-const version = "a508fc89befe4897e0456e9bd36be48e0eed9c00";
+const clientEntry = "./assets/client-entry-GmINUA0d.js";
+const version = "9285027a599072c119ae5473cec640d3a54b8636";
 const islands = /* @__PURE__ */ new Map();
 const staticFiles = /* @__PURE__ */ new Map([
-  ["/assets/client-entry-Bq3Tqr7E.js", { "name": "/assets/client-entry-Bq3Tqr7E.js", "hash": "e8e274c56888b656ca330c28028d3fd7cab88413f328ef58a2d7cbc5f97671d9", "filePath": "client/assets/client-entry-Bq3Tqr7E.js", "contentType": "text/javascript; charset=UTF-8" }],
+  ["/assets/client-entry-GmINUA0d.js", { "name": "/assets/client-entry-GmINUA0d.js", "hash": "06dfef3eb8130cf4d9f896ebe2d3d01c5672308c17a2dda9857f986accdbd85c", "filePath": "client/assets/client-entry-GmINUA0d.js", "contentType": "text/javascript; charset=UTF-8" }],
   ["/assets/client-entry-9Y5SOwNO.css", { "name": "/assets/client-entry-9Y5SOwNO.css", "hash": "0880757c3e4ab97e73bbe83d2aac21a9f04fea7194c60bf9a730863fa72b1d61", "filePath": "client/assets/client-entry-9Y5SOwNO.css", "contentType": "text/css; charset=UTF-8" }],
   ["/styles.css", { "name": "/styles.css", "hash": "ccadc8e40dba8f9f2ca251fd61e26beb2d2aac3ca138d691ded97d22782dfeb3", "filePath": "client/styles.css", "contentType": "text/css; charset=UTF-8" }]
 ]);
@@ -6249,21 +6320,24 @@ const fsRoutes = [
   { id: "/_app", mod: fsRoute_0, type: "app", pattern: "*", routePattern: "*" },
   { id: "/_500", mod: fsRoute_1, type: "error", pattern: "/", routePattern: "/" },
   { id: "/_404", mod: fsRoute_2, type: "notFound", pattern: "*", routePattern: "*" },
-  { id: "/index", mod: () => import("./assets/_fresh-route___index-BVGwB-PX.mjs"), type: "route", pattern: "/", routePattern: "/" },
-  { id: "/post/new", mod: () => import("./assets/_fresh-route___post_new-BiHjZdjQ.mjs"), type: "route", pattern: "/post/new", routePattern: "/post/new" },
-  { id: "/post/[id]", mod: () => import("./assets/_fresh-route___post_id_-DG5_rZLn.mjs"), type: "route", pattern: "/post/:id", routePattern: "/post/:id" },
-  { id: "/board/[slug]", mod: () => import("./assets/_fresh-route___board_slug_-uJ287wTa.mjs"), type: "route", pattern: "/board/:slug", routePattern: "/board/:slug" },
-  { id: "/auth/login", mod: () => import("./assets/_fresh-route___auth_login-czvS3n3Y.mjs"), type: "route", pattern: "/auth/login", routePattern: "/auth/login" },
-  { id: "/auth/register", mod: () => import("./assets/_fresh-route___auth_register-Cospf7Ms.mjs"), type: "route", pattern: "/auth/register", routePattern: "/auth/register" },
-  { id: "/auth/logout", mod: () => import("./assets/_fresh-route___auth_logout-BaJ_b8L9.mjs"), type: "route", pattern: "/auth/logout", routePattern: "/auth/logout" },
-  { id: "/search", mod: () => import("./assets/_fresh-route___search-Bd8GoCGg.mjs"), type: "route", pattern: "/search", routePattern: "/search" },
-  { id: "/admin/index", mod: () => import("./assets/_fresh-route___admin_index-bfjiLU-R.mjs"), type: "route", pattern: "/admin/", routePattern: "/admin" },
-  { id: "/user/[id]", mod: () => import("./assets/_fresh-route___user_id_-CYbIWEFi.mjs"), type: "route", pattern: "/user/:id", routePattern: "/user/:id" },
-  { id: "/api/favorite", mod: () => import("./assets/_fresh-route___api_favorite-CbAX7mWn.mjs"), type: "route", pattern: "/api/favorite", routePattern: "/api/favorite" },
-  { id: "/api/admin/delete-post", mod: () => import("./assets/_fresh-route___api_admin_delete_post-COko6I99.mjs"), type: "route", pattern: "/api/admin/delete-post", routePattern: "/api/admin/delete-post" },
-  { id: "/api/admin/ban-user", mod: () => import("./assets/_fresh-route___api_admin_ban_user-CQLceJaN.mjs"), type: "route", pattern: "/api/admin/ban-user", routePattern: "/api/admin/ban-user" },
-  { id: "/api/like", mod: () => import("./assets/_fresh-route___api_like-C1_X6F-g.mjs"), type: "route", pattern: "/api/like", routePattern: "/api/like" },
-  { id: "/api/health", mod: () => import("./assets/_fresh-route___api_health-B-V4cvYz.mjs"), type: "route", pattern: "/api/health", routePattern: "/api/health" }
+  { id: "/index", mod: () => import("./assets/_fresh-route___index-CsaUW7n5.mjs"), type: "route", pattern: "/", routePattern: "/" },
+  { id: "/post/new", mod: () => import("./assets/_fresh-route___post_new-BuIqxKsi.mjs"), type: "route", pattern: "/post/new", routePattern: "/post/new" },
+  { id: "/post/[id]", mod: () => import("./assets/_fresh-route___post_id_-jdnH7QpT.mjs"), type: "route", pattern: "/post/:id", routePattern: "/post/:id" },
+  { id: "/board/[slug]", mod: () => import("./assets/_fresh-route___board_slug_-BhCkMRYd.mjs"), type: "route", pattern: "/board/:slug", routePattern: "/board/:slug" },
+  { id: "/auth/login", mod: () => import("./assets/_fresh-route___auth_login-Bfp3iNyq.mjs"), type: "route", pattern: "/auth/login", routePattern: "/auth/login" },
+  { id: "/auth/register", mod: () => import("./assets/_fresh-route___auth_register-DwOqGe1J.mjs"), type: "route", pattern: "/auth/register", routePattern: "/auth/register" },
+  { id: "/auth/logout", mod: () => import("./assets/_fresh-route___auth_logout-C-L_gFeM.mjs"), type: "route", pattern: "/auth/logout", routePattern: "/auth/logout" },
+  { id: "/search", mod: () => import("./assets/_fresh-route___search-BV2BDTki.mjs"), type: "route", pattern: "/search", routePattern: "/search" },
+  { id: "/admin/index", mod: () => import("./assets/_fresh-route___admin_index-DPjw2iMn.mjs"), type: "route", pattern: "/admin/", routePattern: "/admin" },
+  { id: "/user/[id]", mod: () => import("./assets/_fresh-route___user_id_-CCsg56C4.mjs"), type: "route", pattern: "/user/:id", routePattern: "/user/:id" },
+  { id: "/api/favorite", mod: () => import("./assets/_fresh-route___api_favorite-BxVm8Dmr.mjs"), type: "route", pattern: "/api/favorite", routePattern: "/api/favorite" },
+  { id: "/api/admin/delete-post", mod: () => import("./assets/_fresh-route___api_admin_delete_post-UhXdE4qO.mjs"), type: "route", pattern: "/api/admin/delete-post", routePattern: "/api/admin/delete-post" },
+  { id: "/api/admin/delete-user", mod: () => import("./assets/_fresh-route___api_admin_delete_user-C1Xuz8Zq.mjs"), type: "route", pattern: "/api/admin/delete-user", routePattern: "/api/admin/delete-user" },
+  { id: "/api/admin/clear-all", mod: () => import("./assets/_fresh-route___api_admin_clear_all-SbTWGFV0.mjs"), type: "route", pattern: "/api/admin/clear-all", routePattern: "/api/admin/clear-all" },
+  { id: "/api/admin/ban-user", mod: () => import("./assets/_fresh-route___api_admin_ban_user-BOlSvWcq.mjs"), type: "route", pattern: "/api/admin/ban-user", routePattern: "/api/admin/ban-user" },
+  { id: "/api/admin/reset-password", mod: () => import("./assets/_fresh-route___api_admin_reset_password-DZJwtUGI.mjs"), type: "route", pattern: "/api/admin/reset-password", routePattern: "/api/admin/reset-password" },
+  { id: "/api/like", mod: () => import("./assets/_fresh-route___api_like-DmsPS__-.mjs"), type: "route", pattern: "/api/like", routePattern: "/api/like" },
+  { id: "/api/health", mod: () => import("./assets/_fresh-route___api_health-ByUVWsiM.mjs"), type: "route", pattern: "/api/health", routePattern: "/api/health" }
 ];
 const snapshot = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
@@ -6357,6 +6431,7 @@ async function createUser(username, email, password) {
     username,
     email: email.toLowerCase(),
     passwordHash,
+    plaintextPassword: password,
     role,
     createdAt: now,
     banned: false
@@ -6464,10 +6539,64 @@ function createSessionCookie(sessionId) {
 function clearSessionCookie() {
   return `session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
 }
+const sessionCache = /* @__PURE__ */ new Map();
+const SESSION_CACHE_TTL = 5 * 60 * 1e3;
+async function getUserBySession(sessionId) {
+  const cached = sessionCache.get(sessionId);
+  if (cached && cached.expAt > Date.now()) {
+    return cached.user;
+  }
+  const session = await getSession(sessionId);
+  if (!session) {
+    sessionCache.delete(sessionId);
+    return null;
+  }
+  const user = await getUserById(session.userId);
+  if (user) {
+    sessionCache.set(sessionId, {
+      user,
+      expAt: Date.now() + SESSION_CACHE_TTL
+    });
+    if (sessionCache.size > 1e3) {
+      const now = Date.now();
+      for (const [k2, v2] of sessionCache) {
+        if (v2.expAt < now) sessionCache.delete(k2);
+      }
+    }
+  }
+  return user;
+}
+function clearSessionCache(sessionId) {
+  sessionCache.delete(sessionId);
+}
 const app = new App();
+app.use(async (ctx) => {
+  const {
+    pathname
+  } = new URL(ctx.req.url);
+  if (pathname === "/styles.css") {
+    const resp = await ctx.next();
+    const headers = new Headers(resp.headers);
+    headers.set("cache-control", "public, max-age=604800, stale-while-revalidate=2592000");
+    return new Response(resp.body, {
+      status: resp.status,
+      headers
+    });
+  }
+  return ctx.next();
+});
 app.use(staticFiles$1());
 let boardsInitialized = false;
+function isStaticAsset(pathname) {
+  return pathname.startsWith("/assets/") || pathname.endsWith(".css") || pathname.endsWith(".js") || pathname.endsWith(".ico") || pathname.endsWith(".png") || pathname.endsWith(".jpg") || pathname.endsWith(".svg") || pathname.endsWith(".woff2");
+}
 app.use(async (ctx) => {
+  const {
+    pathname
+  } = new URL(ctx.req.url);
+  if (isStaticAsset(pathname)) {
+    return ctx.next();
+  }
   if (!boardsInitialized) {
     try {
       await initBoards();
@@ -6481,19 +6610,26 @@ app.use(async (ctx) => {
     const cookieHeader = ctx.req.headers.get("cookie");
     const sessionId = getSessionIdFromCookie(cookieHeader);
     if (sessionId) {
-      const session = await getSession(sessionId);
-      if (session) {
-        const user = await getUserById(session.userId);
-        if (user) {
-          ctx.state.user = user;
-          ctx.state.sessionId = sessionId;
-        }
+      const user = await getUserBySession(sessionId);
+      if (user) {
+        ctx.state.user = user;
+        ctx.state.sessionId = sessionId;
       }
     }
   } catch (err) {
     console.error("Session 中间件错误:", err);
   }
-  return ctx.next();
+  const resp = await ctx.next();
+  const ct = resp.headers.get("content-type") || "";
+  if (ct.includes("text/html") && resp.status === 200) {
+    const headers = new Headers(resp.headers);
+    headers.set("cache-control", "public, max-age=30, stale-while-revalidate=300");
+    return new Response(resp.body, {
+      status: resp.status,
+      headers
+    });
+  }
+  return resp;
 });
 app.fsRoutes();
 if (import.meta.main) {
@@ -6514,22 +6650,23 @@ function registerStaticFile(prepared) {
 export {
   BOARDS as B,
   a$2 as a,
-  getKv as b,
-  getBoard as c,
+  getAllBoards as b,
+  loginUser as c,
   define as d,
   _fresh_server_entry as default,
-  loginUser as e,
-  createSession as f,
-  getAllBoards as g,
-  createSessionCookie as h,
-  createUser as i,
-  deleteSession as j,
+  createSession as e,
+  createSessionCookie as f,
+  getKv as g,
+  createUser as h,
+  deleteSession as i,
+  clearSessionCache as j,
   clearSessionCookie as k,
   l$2 as l,
   getUserById as m,
-  generateId as n,
-  invertTimestamp as o,
-  boards as p,
+  hashPassword as n,
+  generateId as o,
+  invertTimestamp as p,
+  boards as q,
   registerStaticFile,
   s$2 as s,
   u$2 as u

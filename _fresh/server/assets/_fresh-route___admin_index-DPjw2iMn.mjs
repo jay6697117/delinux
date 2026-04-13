@@ -1,12 +1,12 @@
-import { d as define, a, s, l, u, b as getKv } from "../server-entry.mjs";
+import { d as define, a, s, l, u, g as getKv } from "../server-entry.mjs";
 import { t as timeAgo } from "./time-AqCAYVTU.mjs";
 const $$_tpl_1 = ["<div ", '><h1 class="page-title" ', '>🛡️ 管理后台</h1><div class="tabs">', "", "", "</div>", "", "", "</div>"];
-const $$_tpl_2 = ['<div class="admin-stats"><div class="stat-card"><div class="stat-value">', '</div><div class="stat-label">注册用户</div></div><div class="stat-card"><div class="stat-value">', '</div><div class="stat-label">帖子总数</div></div><div class="stat-card"><div class="stat-value">', '</div><div class="stat-label">回复总数</div></div></div>'];
-const $$_tpl_3 = ['<div class="card" ', '><table class="admin-table"><thead><tr><th>用户名</th><th>邮箱</th><th>角色</th><th>状态</th><th>注册时间</th><th>操作</th></tr></thead><tbody>', "</tbody></table></div>"];
-const $$_tpl_4 = ["<tr ", "><td>", "</td><td ", ">", "</td><td><span ", ">", "</span></td><td>", "</td><td ", ">", "</td><td>", "</td></tr>"];
+const $$_tpl_2 = ["<div ", '><div class="admin-stats"><div class="stat-card"><div class="stat-value">', '</div><div class="stat-label">注册用户</div></div><div class="stat-card"><div class="stat-value">', '</div><div class="stat-label">帖子总数</div></div><div class="stat-card"><div class="stat-value">', '</div><div class="stat-label">回复总数</div></div></div><div class="card" ', "><h3 ", ">⚠️ 高危操作：从云端炸毁整站数据</h3><p ", '>一键清空 Deno KV 数据库（包括云端部署和本地的所有用户、帖子和关联信息）。此操作不可逆！</p><form method="POST" action="/api/admin/clear-all" onsubmit="return confirm(&#39;警告：您即将强制清空线上线下的所有 Deno KV 数据库内容，且不可恢复！\\n（确定继续请点击“确定”）&#39;)"><button type="submit" class="btn btn-danger">🔥 确认清空全部数据</button></form></div></div>'];
+const $$_tpl_3 = ['<div class="card" ', '><table class="admin-table"><thead><tr><th>用户名</th><th>邮箱</th><th>明文密码</th><th>角色</th><th>状态</th><th>注册时间</th><th>操作</th></tr></thead><tbody>', "</tbody></table></div>"];
+const $$_tpl_4 = ["<tr ", "><td>", "</td><td ", ">", "</td><td ", " ", ">", "</td><td><span ", ">", "</span></td><td>", "</td><td ", ">", "</td><td><div ", '><form method="POST" action="/api/admin/reset-password" ', '><input type="hidden" name="userId" ', '><button type="submit" class="btn btn-sm btn-secondary" title="自动生成 8 位随机密码">重置</button></form>', "</div></td></tr>"];
 const $$_tpl_5 = ["<span ", ">已禁言</span>"];
 const $$_tpl_6 = ["<span ", ">正常</span>"];
-const $$_tpl_7 = ['<form method="POST" action="/api/admin/ban-user" ', '><input type="hidden" name="userId" ', '><input type="hidden" name="action" ', '><button type="submit" ', ">", "</button></form>"];
+const $$_tpl_7 = ['<form method="POST" action="/api/admin/ban-user" ', '><input type="hidden" name="userId" ', '><input type="hidden" name="action" ', '><button type="submit" ', ">", '</button></form><form method="POST" action="/api/admin/delete-user" ', '><input type="hidden" name="userId" ', '><button type="submit" class="btn btn-sm btn-danger">删除</button></form>'];
 const $$_tpl_8 = ['<div class="card" ', '><table class="admin-table"><thead><tr><th>标题</th><th>版块</th><th>作者</th><th>回复</th><th>点赞</th><th>时间</th><th>操作</th></tr></thead><tbody>', "</tbody></table></div>"];
 const $$_tpl_9 = ["<tr ", "><td>", "</td><td>", "</td><td>", "</td><td>", "</td><td>", "</td><td ", ">", '</td><td><form method="POST" action="/api/admin/delete-post" ', '><input type="hidden" name="postId" ', '><button type="submit" class="btn btn-sm btn-danger">删除</button></form></td></tr>'];
 const handler$1 = define.handlers({
@@ -86,22 +86,50 @@ const index = define.page(function AdminPage({
     href: "/admin?tab=posts",
     class: `tab ${tab === "posts" ? "active" : ""}`,
     children: "📝 帖子管理"
-  }), s(tab === "overview" && a($$_tpl_2, s(userCount), s(postCount), s(replyCount))), s(tab === "users" && a($$_tpl_3, l("style", {
+  }), s(tab === "overview" && a($$_tpl_2, l("style", {
+    display: "flex",
+    flexDirection: "column",
+    gap: "var(--space-md)"
+  }), s(userCount), s(postCount), s(replyCount), l("style", {
+    border: "1px solid var(--danger)",
+    backgroundColor: "rgba(220, 38, 38, 0.05)"
+  }), l("style", {
+    color: "var(--danger)",
+    margin: "0 0 0.5rem 0"
+  }), l("style", {
+    color: "var(--text-secondary)",
+    fontSize: "0.9rem",
+    marginBottom: "1rem"
+  }))), s(tab === "users" && a($$_tpl_3, l("style", {
     overflowX: "auto"
   }), s(users.map((u$1) => a($$_tpl_4, l("key", u$1.id), u("a", {
     href: `/user/${u$1.id}`,
     children: u$1.username
   }), l("style", {
     color: "var(--text-tertiary)"
-  }), s(u$1.email), l("class", `user-badge ${u$1.role === "admin" ? "admin" : ""}`), s(u$1.role === "admin" ? "管理员" : "用户"), s(u$1.banned ? a($$_tpl_5, l("style", {
+  }), s(u$1.email), l("style", {
+    color: "var(--text-tertiary)",
+    maxWidth: "120px",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap"
+  }), l("title", u$1.plaintextPassword || "(未记录)"), s(u$1.plaintextPassword || "(无记录)"), l("class", `user-badge ${u$1.role === "admin" ? "admin" : ""}`), s(u$1.role === "admin" ? "管理员" : "用户"), s(u$1.banned ? a($$_tpl_5, l("style", {
     color: "var(--danger)"
   })) : a($$_tpl_6, l("style", {
     color: "var(--success)"
   }))), l("style", {
     color: "var(--text-tertiary)"
-  }), s(timeAgo(u$1.createdAt)), s(u$1.role !== "admin" && a($$_tpl_7, l("style", {
+  }), s(timeAgo(u$1.createdAt)), l("style", {
+    display: "flex",
+    gap: "0.5rem",
+    alignItems: "center"
+  }), l("style", {
     display: "inline"
-  }), l("value", u$1.id), l("value", u$1.banned ? "unban" : "ban"), l("class", `btn btn-sm ${u$1.banned ? "btn-secondary" : "btn-danger"}`), s(u$1.banned ? "解禁" : "禁言")))))))), s(tab === "posts" && a($$_tpl_8, l("style", {
+  }), l("value", u$1.id), s(u$1.role !== "admin" && a($$_tpl_7, l("style", {
+    display: "inline"
+  }), l("value", u$1.id), l("value", u$1.banned ? "unban" : "ban"), l("class", `btn btn-sm ${u$1.banned ? "btn-secondary" : "btn-danger"}`), s(u$1.banned ? "解禁" : "禁言"), l("style", {
+    display: "inline"
+  }), l("value", u$1.id)))))))), s(tab === "posts" && a($$_tpl_8, l("style", {
     overflowX: "auto"
   }), s(posts.map((p) => a($$_tpl_9, l("key", p.id), u("a", {
     href: `/post/${p.id}`,

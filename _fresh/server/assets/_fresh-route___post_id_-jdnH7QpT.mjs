@@ -1,5 +1,5 @@
-import { d as define, a, s, l, u, g as getAllBoards } from "../server-entry.mjs";
-import { g as getPost, a as getReplies, i as isLiked, b as isFavorited, d as createReply } from "./posts-CtOzPUAj.mjs";
+import { d as define, a, s, l, u, b as getAllBoards } from "../server-entry.mjs";
+import { g as getPost, a as getReplies, i as isLiked, b as isFavorited, d as createReply } from "./posts-DS_gLNFV.mjs";
 import { t as timeAgo, f as formatDate } from "./time-AqCAYVTU.mjs";
 function _getDefaults() {
   return {
@@ -2237,15 +2237,10 @@ const handler$1 = define.handlers({
     } = ctx.params;
     const post = await getPost(id);
     if (!post) return ctx.renderNotFound();
-    const boards = await getAllBoards();
+    const boards = getAllBoards();
     const board = boards.find((b) => b.slug === post.boardSlug);
-    const repliesResult = await getReplies(id);
+    const [repliesResult, liked, favorited] = ctx.state.user ? await Promise.all([getReplies(id), isLiked(id, ctx.state.user.id), isFavorited(id, ctx.state.user.id)]) : [await getReplies(id), false, false];
     const htmlContent = renderMarkdown(post.content);
-    let liked = false, favorited = false;
-    if (ctx.state.user) {
-      liked = await isLiked(id, ctx.state.user.id);
-      favorited = await isFavorited(id, ctx.state.user.id);
-    }
     return {
       data: {
         post,
@@ -2273,12 +2268,10 @@ const handler$1 = define.handlers({
     if (!content) {
       const post = await getPost(id);
       if (!post) return ctx.renderNotFound();
-      const boards = await getAllBoards();
+      const boards = getAllBoards();
       const board = boards.find((b) => b.slug === post.boardSlug);
-      const repliesResult = await getReplies(id);
+      const [repliesResult, liked, favorited] = await Promise.all([getReplies(id), isLiked(id, ctx.state.user.id), isFavorited(id, ctx.state.user.id)]);
       const htmlContent = renderMarkdown(post.content);
-      const liked = await isLiked(id, ctx.state.user.id);
-      const favorited = await isFavorited(id, ctx.state.user.id);
       return {
         data: {
           post,

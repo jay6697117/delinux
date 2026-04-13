@@ -1,4 +1,4 @@
-import { d as define, b as getKv } from "../server-entry.mjs";
+import { d as define, g as getKv } from "../server-entry.mjs";
 const handler$1 = define.handlers({
   async POST(ctx) {
     if (!ctx.state.user || ctx.state.user.role !== "admin") {

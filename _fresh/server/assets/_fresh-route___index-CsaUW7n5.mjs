@@ -1,4 +1,4 @@
-import { d as define, a, s, u, l, g as getAllBoards, b as getKv } from "../server-entry.mjs";
+import { d as define, a, s, u, l, B as BOARDS, g as getKv } from "../server-entry.mjs";
 import { t as timeAgo } from "./time-AqCAYVTU.mjs";
 const $$_tpl_1 = ['<div><div class="board-grid">', '</div><div class="card" ', '><div class="card-header" ', "><span>📋 最新动态</span></div>", "", "</div></div>"];
 const $$_tpl_2 = ['<span class="board-icon">', '</span><div class="board-info"><h3>', "</h3><p>", "</p></div>"];
@@ -12,7 +12,7 @@ const handler$1 = define.handlers({
       const url = new URL(ctx.req.url);
       const cursor = url.searchParams.get("cursor") || void 0;
       const limit = 20;
-      const boards = await getAllBoards();
+      const boards = BOARDS;
       const kv = await getKv();
       const entries = kv.list({
         prefix: ["posts_latest"]
@@ -30,11 +30,8 @@ const handler$1 = define.handlers({
         nextCursor = entries.cursor;
       }
       const hasMore = count > limit;
-      const posts = [];
-      for (const id of postIds) {
-        const postEntry = await kv.get(["posts", id]);
-        if (postEntry.value) posts.push(postEntry.value);
-      }
+      const postEntries = await Promise.all(postIds.map((id) => kv.get(["posts", id])));
+      const posts = postEntries.filter((e) => e.value !== null).map((e) => e.value);
       return {
         data: {
           boards,
@@ -45,9 +42,6 @@ const handler$1 = define.handlers({
       };
     } catch (err) {
       console.error("首页数据加载失败:", err);
-      const {
-        BOARDS
-      } = await import("../server-entry.mjs").then((n) => n.p);
       return {
         data: {
           boards: BOARDS,

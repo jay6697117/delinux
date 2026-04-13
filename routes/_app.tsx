@@ -15,6 +15,7 @@ export default define.page(function App({ Component, state, url }) {
         <title>DeLinux — AI + 生活社区</title>
         <meta name="description" content="DeLinux 是一个 AI 与生活交流的纯文字论坛社区" />
         <link rel="stylesheet" href="/styles.css" />
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
       </head>
       <body>
         {/* 导航栏 */}
@@ -166,6 +167,80 @@ export default define.page(function App({ Component, state, url }) {
                 btn.textContent = '☰';
               });
             });
+          })();
+        `}} />
+
+        {/* 页面跳转进度条 */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            // 创建进度条 DOM
+            var bar = document.createElement('div');
+            bar.id = 'nprogress-bar';
+            var s = bar.style;
+            s.position = 'fixed';
+            s.top = '0';
+            s.left = '0';
+            s.width = '0';
+            s.height = '2.5px';
+            s.background = 'linear-gradient(90deg, #58a6ff, #79c0ff, #a5d6ff)';
+            s.zIndex = '99999';
+            s.transition = 'width 0.4s ease, opacity 0.3s ease';
+            s.boxShadow = '0 0 8px rgba(88,166,255,0.6)';
+            s.opacity = '0';
+            s.pointerEvents = 'none';
+            document.body.appendChild(bar);
+
+            var rafId = null;
+            var progress = 0;
+
+            function start() {
+              progress = 0;
+              bar.style.opacity = '1';
+              bar.style.width = '0';
+              // 用 requestAnimationFrame 平滑递增
+              function tick() {
+                if (progress < 30) progress += 3;
+                else if (progress < 60) progress += 1.5;
+                else if (progress < 85) progress += 0.5;
+                bar.style.width = progress + '%';
+                if (progress < 85) rafId = requestAnimationFrame(tick);
+              }
+              rafId = requestAnimationFrame(tick);
+            }
+
+            function done() {
+              if (rafId) cancelAnimationFrame(rafId);
+              bar.style.width = '100%';
+              setTimeout(function() {
+                bar.style.opacity = '0';
+                setTimeout(function() { bar.style.width = '0'; }, 300);
+              }, 200);
+            }
+
+            // 监听所有内部链接点击
+            document.addEventListener('click', function(e) {
+              var a = e.target.closest('a');
+              if (!a) return;
+              var href = a.getAttribute('href');
+              if (!href) return;
+              // 跳过外链、锚点、新窗口、特殊协议
+              if (href.startsWith('http') || href.startsWith('#') || href.startsWith('data:') || href.startsWith('javascript:')) return;
+              if (a.target === '_blank') return;
+              start();
+            });
+
+            // 表单提交也显示进度条
+            document.addEventListener('submit', function() { start(); });
+
+            // 页面卸载前加速到 90%
+            window.addEventListener('beforeunload', function() {
+              if (rafId) cancelAnimationFrame(rafId);
+              progress = 90;
+              bar.style.width = '90%';
+            });
+
+            // 页面完全加载后完成
+            window.addEventListener('pageshow', function() { done(); });
           })();
         `}} />
       </body>

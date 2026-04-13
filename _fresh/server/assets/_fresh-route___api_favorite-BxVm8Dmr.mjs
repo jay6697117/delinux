@@ -1,10 +1,13 @@
 import { d as define } from "../server-entry.mjs";
-import { f as deletePost } from "./posts-CtOzPUAj.mjs";
+import { t as toggleFavorite } from "./posts-DS_gLNFV.mjs";
 const handler$1 = define.handlers({
   async POST(ctx) {
-    if (!ctx.state.user || ctx.state.user.role !== "admin") {
-      return new Response("Forbidden", {
-        status: 403
+    if (!ctx.state.user) {
+      return new Response(null, {
+        status: 302,
+        headers: {
+          location: "/auth/login"
+        }
       });
     }
     const form = await ctx.req.formData();
@@ -12,8 +15,8 @@ const handler$1 = define.handlers({
     if (!postId) return new Response("Bad request", {
       status: 400
     });
-    await deletePost(postId);
-    const referer = ctx.req.headers.get("referer") || "/";
+    await toggleFavorite(postId, ctx.state.user.id);
+    const referer = ctx.req.headers.get("referer") || `/post/${postId}`;
     return new Response(null, {
       status: 302,
       headers: {
@@ -27,11 +30,11 @@ const css = routeCss;
 const config = void 0;
 const handler = handler$1;
 const handlers = void 0;
-const _freshRoute___api_admin_delete_post = void 0;
+const _freshRoute___api_favorite = void 0;
 export {
   config,
   css,
-  _freshRoute___api_admin_delete_post as default,
+  _freshRoute___api_favorite as default,
   handler,
   handlers
 };

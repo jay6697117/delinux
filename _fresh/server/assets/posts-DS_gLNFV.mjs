@@ -1,4 +1,4 @@
-import { b as getKv, n as generateId, o as invertTimestamp } from "../server-entry.mjs";
+import { g as getKv, o as generateId, p as invertTimestamp } from "../server-entry.mjs";
 async function createPost(title, content, authorId, authorName, boardSlug) {
   const kv = await getKv();
   const id = generateId();
