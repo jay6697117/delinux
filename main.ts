@@ -23,8 +23,9 @@ app.use(async (ctx) => {
     return new Response(resp.body, { status: resp.status, headers });
   }
 
-  // /_fresh/ 下的 hashed 资源：永久缓存（文件名包含 hash，内容变化后 URL 自动变化）
-  if (pathname.startsWith("/_fresh/")) {
+  // /_fresh/ 和 /assets/ 下的 hashed 资源：永久缓存
+  // Vite 构建产物在 /assets/ 路径下，文件名包含 hash，内容变化后 URL 自动变化
+  if (pathname.startsWith("/_fresh/") || pathname.startsWith("/assets/")) {
     const resp = await ctx.next();
     const headers = new Headers(resp.headers);
     headers.set(
@@ -99,7 +100,11 @@ app.use(async (ctx) => {
   const ct = resp.headers.get("content-type") || "";
   if (ct.includes("text/html") && resp.status === 200) {
     const headers = new Headers(resp.headers);
-    headers.set("cache-control", "public, max-age=30, stale-while-revalidate=300");
+    // 如果响应包含 set-cookie（登录/登出等认证状态变化），不缓存页面
+    // 避免浏览器缓存旧的认证状态 UI
+    if (!resp.headers.has("set-cookie")) {
+      headers.set("cache-control", "private, no-cache, max-age=0, must-revalidate");
+    }
     // 通过 Link header 让浏览器尽早发现并加载 CSS（比解析 HTML 更快）
     headers.set("link", "</styles.css>; rel=preload; as=style");
     return new Response(resp.body, { status: resp.status, headers });
