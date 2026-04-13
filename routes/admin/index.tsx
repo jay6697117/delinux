@@ -42,10 +42,22 @@ export default define.page<typeof handler>(function AdminPage({ data }) {
         <a href="/admin?tab=posts" class={`tab ${tab === "posts" ? "active" : ""}`}>📝 帖子管理</a>
       </div>
       {tab === "overview" && (
-        <div class="admin-stats">
-          <div class="stat-card"><div class="stat-value">{userCount}</div><div class="stat-label">注册用户</div></div>
-          <div class="stat-card"><div class="stat-value">{postCount}</div><div class="stat-label">帖子总数</div></div>
-          <div class="stat-card"><div class="stat-value">{replyCount}</div><div class="stat-label">回复总数</div></div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
+          <div class="admin-stats">
+            <div class="stat-card"><div class="stat-value">{userCount}</div><div class="stat-label">注册用户</div></div>
+            <div class="stat-card"><div class="stat-value">{postCount}</div><div class="stat-label">帖子总数</div></div>
+            <div class="stat-card"><div class="stat-value">{replyCount}</div><div class="stat-label">回复总数</div></div>
+          </div>
+          
+          <div class="card" style={{ border: "1px solid var(--danger)", backgroundColor: "rgba(220, 38, 38, 0.05)" }}>
+            <h3 style={{ color: "var(--danger)", margin: "0 0 0.5rem 0" }}>⚠️ 高危操作：从云端炸毁整站数据</h3>
+            <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginBottom: "1rem" }}>
+              一键清空 Deno KV 数据库（包括云端部署和本地的所有用户、帖子和关联信息）。此操作不可逆！
+            </p>
+            <form method="POST" action="/api/admin/clear-all" onsubmit="return confirm('警告：您即将强制清空线上线下的所有 Deno KV 数据库内容，且不可恢复！\n（确定继续请点击“确定”）')">
+              <button type="submit" class="btn btn-danger">🔥 确认清空全部数据</button>
+            </form>
+          </div>
         </div>
       )}
       {tab === "users" && (
