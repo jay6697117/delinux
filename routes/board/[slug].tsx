@@ -1,11 +1,9 @@
-// 版块帖子列表页
-
 import { define } from "../../utils.ts";
 import { getBoardBySlug } from "../../utils/boards.ts";
 import { getKv } from "../../utils/db.ts";
 import { getPostsByIds } from "../../utils/posts.ts";
 import { timeAgo } from "../../utils/time.ts";
-import type { Post } from "../../utils/state.ts";
+import { getCachedData, setCachedData } from "../../utils/cache.ts";
 
 export const handler = define.handlers({
   async GET(ctx) {
@@ -17,8 +15,26 @@ export const handler = define.handlers({
     const url = new URL(ctx.req.url);
     const cursor = url.searchParams.get("cursor") || undefined;
     const limit = 20;
+
+    // 无分页时使用内存缓存（30 秒 TTL）
+    const cacheKey = cursor ? "" : `board:${slug}`;
+    if (cacheKey) {
+      const cached = getCachedData<{
+        board: ReturnType<typeof getBoardBySlug>;
+        posts: Awaited<ReturnType<typeof getPostsByIds>>;
+        hasMore: boolean;
+        nextCursor: string | undefined;
+        slug: string;
+      }>(cacheKey);
+      if (cached) return { data: cached };
+    }
+
     const kv = await getKv();
-    const entries = kv.list<string>({ prefix: ["posts_by_board", slug] }, { limit: limit + 1, cursor, consistency: "eventual" });
+    const entries = kv.list<string>({ prefix: ["posts_by_board", slug] }, {
+      limit: limit + 1,
+      cursor,
+      consistency: "eventual",
+    });
     const postIds: string[] = [];
     let nextCursor: string | undefined;
     let count = 0;
@@ -31,7 +47,13 @@ export const handler = define.handlers({
     const hasMore = count > limit;
     // 批量并行获取帖子详情
     const posts = await getPostsByIds(postIds);
-    return { data: { board, posts, hasMore, nextCursor, slug } };
+
+    const data = { board, posts, hasMore, nextCursor, slug };
+
+    // 缓存版块数据（无分页时）
+    if (cacheKey) setCachedData(cacheKey, data);
+
+    return { data };
   },
 });
 
@@ -40,30 +62,56 @@ export default define.page<typeof handler>(function BoardPage({ data, state }) {
   return (
     <div>
       <div class="page-header">
-        <h1 class="page-title">{board.icon} {board.name} — {board.description}</h1>
-        {state.user && <a href={`/post/new?board=${slug}`} class="btn btn-primary">发帖</a>}
+        <h1 class="page-title">
+          {board.icon} {board.name} — {board.description}
+        </h1>
+        {state.user && (
+          <a href={`/post/new?board=${slug}`} class="btn btn-primary">发帖</a>
+        )}
       </div>
       <div class="card">
-        {posts.length === 0 ? (
-          <div class="empty-state"><div class="empty-state-icon">{board.icon}</div><p class="empty-state-text">这个版块还没有帖子</p></div>
-        ) : (
-          <ul class="post-list">
-            {posts.map((post) => (
-              <li class="post-item" key={post.id}>
-                <div class="post-meta-left"><span class="post-replies-count">{post.replyCount}</span><span class="post-replies-label">回复</span></div>
-                <div class="post-content-area">
-                  <div class="post-title"><a href={`/post/${post.id}`}>{post.title}</a></div>
-                  <div class="post-info">
-                    <span class="post-author">{post.authorName}</span>
-                    <span class="post-time">{timeAgo(post.createdAt)}</span>
-                    <span class="post-stats"><span>👍 {post.likeCount}</span><span>💬 {post.replyCount}</span></span>
+        {posts.length === 0
+          ? (
+            <div class="empty-state">
+              <div class="empty-state-icon">{board.icon}</div>
+              <p class="empty-state-text">这个版块还没有帖子</p>
+            </div>
+          )
+          : (
+            <ul class="post-list">
+              {posts.map((post) => (
+                <li class="post-item" key={post.id}>
+                  <div class="post-meta-left">
+                    <span class="post-replies-count">{post.replyCount}</span>
+                    <span class="post-replies-label">回复</span>
                   </div>
-                </div>
-              </li>
-            ))}
-          </ul>
+                  <div class="post-content-area">
+                    <div class="post-title">
+                      <a href={`/post/${post.id}`}>{post.title}</a>
+                    </div>
+                    <div class="post-info">
+                      <span class="post-author">{post.authorName}</span>
+                      <span class="post-time">{timeAgo(post.createdAt)}</span>
+                      <span class="post-stats">
+                        <span>👍 {post.likeCount}</span>
+                        <span>💬 {post.replyCount}</span>
+                      </span>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        {hasMore && nextCursor && (
+          <div class="pagination">
+            <a
+              href={`/board/${slug}?cursor=${nextCursor}`}
+              class="btn btn-secondary"
+            >
+              加载更多
+            </a>
+          </div>
         )}
-        {hasMore && nextCursor && <div class="pagination"><a href={`/board/${slug}?cursor=${nextCursor}`} class="btn btn-secondary">加载更多</a></div>}
       </div>
     </div>
   );

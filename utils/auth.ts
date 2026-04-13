@@ -1,8 +1,8 @@
 // 用户认证相关业务逻辑
 
-import { getKv, generateId } from "./db.ts";
+import { generateId, getKv } from "./db.ts";
 import { hashPassword, verifyPassword } from "./password.ts";
-import type { User, UserPublic, Session } from "./state.ts";
+import type { Session, User, UserPublic } from "./state.ts";
 
 const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 天
 
@@ -16,14 +16,18 @@ export async function createUser(
 ): Promise<{ ok: boolean; error?: string; user?: UserPublic }> {
   const kv = await getKv();
 
-  // 检查用户名是否已存在
-  const existingByName = await kv.get(["users_by_name", username.toLowerCase()]);
+  // 并行检查用户名和邮箱是否已存在（eventual 降低跨区域延迟）
+  const [existingByName, existingByEmail] = await Promise.all([
+    kv.get(["users_by_name", username.toLowerCase()], {
+      consistency: "eventual",
+    }),
+    kv.get(["users_by_email", email.toLowerCase()], {
+      consistency: "eventual",
+    }),
+  ]);
   if (existingByName.value) {
     return { ok: false, error: "用户名已被注册" };
   }
-
-  // 检查邮箱是否已存在
-  const existingByEmail = await kv.get(["users_by_email", email.toLowerCase()]);
   if (existingByEmail.value) {
     return { ok: false, error: "邮箱已被注册" };
   }
@@ -34,9 +38,15 @@ export async function createUser(
 
   // 检查是否为首个用户，首个用户自动成为管理员
   let isFirstUser = false;
-  const firstCheck = kv.list({ prefix: ["users"] }, { limit: 1 });
+  const firstCheck = kv.list({ prefix: ["users"] }, {
+    limit: 1,
+    consistency: "eventual",
+  });
   let hasUsers = false;
-  for await (const _ of firstCheck) { hasUsers = true; break; }
+  for await (const _ of firstCheck) {
+    hasUsers = true;
+    break;
+  }
   if (!hasUsers) isFirstUser = true;
 
   const role = isFirstUser ? "admin" : "user";
@@ -79,13 +89,19 @@ export async function loginUser(
   const kv = await getKv();
 
   // 通过邮箱查找用户 ID
-  const userIdEntry = await kv.get<string>(["users_by_email", email.toLowerCase()]);
+  // eventual 降低跨区域延迟（atomic check 保证写入安全）
+  const userIdEntry = await kv.get<string>([
+    "users_by_email",
+    email.toLowerCase(),
+  ], { consistency: "eventual" });
   if (!userIdEntry.value) {
     return { ok: false, error: "邮箱或密码错误" };
   }
 
   // 获取用户数据
-  const userEntry = await kv.get<User>(["users", userIdEntry.value]);
+  const userEntry = await kv.get<User>(["users", userIdEntry.value], {
+    consistency: "eventual",
+  });
   if (!userEntry.value) {
     return { ok: false, error: "邮箱或密码错误" };
   }
@@ -119,7 +135,10 @@ export async function getUserById(id: string): Promise<UserPublic | null> {
 // 获取所有用户（管理员用）
 export async function getAllUsers(): Promise<User[]> {
   const kv = await getKv();
-  const entries = kv.list<User>({ prefix: ["users"] }, { limit: 500, consistency: "eventual" });
+  const entries = kv.list<User>({ prefix: ["users"] }, {
+    limit: 500,
+    consistency: "eventual",
+  });
   const users: User[] = [];
   for await (const entry of entries) {
     users.push(entry.value);
@@ -128,9 +147,14 @@ export async function getAllUsers(): Promise<User[]> {
 }
 
 // 设置用户角色
-export async function setUserRole(userId: string, role: "user" | "admin"): Promise<boolean> {
+export async function setUserRole(
+  userId: string,
+  role: "user" | "admin",
+): Promise<boolean> {
   const kv = await getKv();
-  const entry = await kv.get<User>(["users", userId]);
+  const entry = await kv.get<User>(["users", userId], {
+    consistency: "eventual",
+  });
   if (!entry.value) return false;
   const updated = { ...entry.value, role };
   await kv.set(["users", userId], updated);
@@ -144,7 +168,9 @@ export async function changePassword(
   newPassword: string,
 ): Promise<{ ok: boolean; error?: string }> {
   const kv = await getKv();
-  const entry = await kv.get<User>(["users", userId]);
+  const entry = await kv.get<User>(["users", userId], {
+    consistency: "eventual",
+  });
   if (!entry.value) return { ok: false, error: "用户不存在" };
 
   // 验证旧密码
@@ -186,7 +212,9 @@ export async function createSession(userId: string): Promise<string> {
 // 获取 Session
 export async function getSession(sessionId: string): Promise<Session | null> {
   const kv = await getKv();
-  const entry = await kv.get<Session>(["sessions", sessionId], { consistency: "eventual" });
+  const entry = await kv.get<Session>(["sessions", sessionId], {
+    consistency: "eventual",
+  });
   if (!entry.value) return null;
 
   // 检查是否过期
@@ -205,7 +233,9 @@ export async function deleteSession(sessionId: string): Promise<void> {
 }
 
 // 从 Cookie 中解析 sessionId
-export function getSessionIdFromCookie(cookieHeader: string | null): string | null {
+export function getSessionIdFromCookie(
+  cookieHeader: string | null,
+): string | null {
   if (!cookieHeader) return null;
   const match = cookieHeader.match(/session=([^;]+)/);
   return match ? match[1] : null;
@@ -213,7 +243,9 @@ export function getSessionIdFromCookie(cookieHeader: string | null): string | nu
 
 // 生成 Set-Cookie 头
 export function createSessionCookie(sessionId: string): string {
-  return `session=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_DURATION / 1000}`;
+  return `session=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${
+    SESSION_DURATION / 1000
+  }`;
 }
 
 // 生成删除 Cookie 的头
@@ -227,7 +259,9 @@ const sessionCache = new Map<string, { user: UserPublic; expAt: number }>();
 const SESSION_CACHE_TTL = 5 * 60 * 1000; // 5 分钟
 
 // 通过 sessionId 获取用户（带内存缓存）
-export async function getUserBySession(sessionId: string): Promise<UserPublic | null> {
+export async function getUserBySession(
+  sessionId: string,
+): Promise<UserPublic | null> {
   // 先查内存缓存
   const cached = sessionCache.get(sessionId);
   if (cached && cached.expAt > Date.now()) {
@@ -243,7 +277,10 @@ export async function getUserBySession(sessionId: string): Promise<UserPublic | 
 
   const user = await getUserById(session.userId);
   if (user) {
-    sessionCache.set(sessionId, { user, expAt: Date.now() + SESSION_CACHE_TTL });
+    sessionCache.set(sessionId, {
+      user,
+      expAt: Date.now() + SESSION_CACHE_TTL,
+    });
     // 防止内存泄漏，超过 1000 条时清理过期条目
     if (sessionCache.size > 1000) {
       const now = Date.now();

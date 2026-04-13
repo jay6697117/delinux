@@ -1,6 +1,7 @@
 // 帖子相关业务逻辑
 
 import { generateId, getKv, invertTimestamp } from "./db.ts";
+import { invalidateCache } from "./cache.ts";
 import type { Post, Reply } from "./state.ts";
 
 export interface PostKvReader {
@@ -55,6 +56,10 @@ export async function createPost(
   // 建立搜索索引
   await indexPost(id, title, boardSlug, now);
 
+  // 失效首页和版块缓存
+  invalidateCache("home:");
+  invalidateCache(`board:${boardSlug}`);
+
   return post;
 }
 
@@ -65,25 +70,29 @@ export async function getPost(id: string): Promise<Post | null> {
   return entry.value;
 }
 
-// 批量获取帖子（并行 kv.get，替代各页面重复手写的 Promise.all + kv.get 模式）
+// 批量获取帖子（使用 getMany 单次请求替代 N 次并行 get，减少网络往返）
 export async function getPostsByIds(
   ids: string[],
   kvReader?: PostKvReader,
 ): Promise<Post[]> {
   if (ids.length === 0) return [];
   const kv = kvReader ?? await getKv();
-  const entries = await Promise.all(
-    ids.map((id) => kv.get<Post>(["posts", id], { consistency: "eventual" })),
-  );
+  // getMany 将 N 次网络请求合并为 1 次
+  const keys = ids.map((id) => ["posts", id] as Deno.KvKey);
+  const entries = await (kv as Deno.Kv).getMany<Post[]>(keys, {
+    consistency: "eventual",
+  });
   return entries
-    .filter((entry): entry is { value: Post } => entry.value !== null)
-    .map((entry) => entry.value);
+    .filter((entry: Deno.KvEntryMaybe<Post>) => entry.value !== null)
+    .map((entry: Deno.KvEntryMaybe<Post>) => entry.value as Post);
 }
 
 // 删除帖子（管理员）
 export async function deletePost(id: string): Promise<boolean> {
   const kv = await getKv();
-  const postEntry = await kv.get<Post>(["posts", id]);
+  const postEntry = await kv.get<Post>(["posts", id], {
+    consistency: "eventual",
+  });
   if (!postEntry.value) return false;
 
   const post = postEntry.value;
@@ -116,8 +125,10 @@ export async function createReply(
 ): Promise<Reply | null> {
   const kv = await getKv();
 
-  // 获取帖子
-  const postEntry = await kv.get<Post>(["posts", postId]);
+  // 获取帖子（eventual 降低读延迟，atomic 保证写入安全）
+  const postEntry = await kv.get<Post>(["posts", postId], {
+    consistency: "eventual",
+  });
   if (!postEntry.value) return null;
 
   const post = postEntry.value;
@@ -155,6 +166,10 @@ export async function createReply(
     .delete(["posts_latest", oldInvertedTime, postId])
     .set(["posts_latest", newInvertedTime, postId], postId)
     .commit();
+
+  // 失效首页和版块缓存（回复会更新帖子排序）
+  invalidateCache("home:");
+  invalidateCache(`board:${post.boardSlug}`);
 
   return reply;
 }
@@ -198,9 +213,11 @@ export async function toggleLike(
 ): Promise<boolean> {
   const kv = await getKv();
   const likeKey: Deno.KvKey = ["likes", postId, userId];
-  const existing = await kv.get(likeKey);
-
-  const postEntry = await kv.get<Post>(["posts", postId]);
+  // 并行读取点赞状态和帖子数据（eventual 降低延迟）
+  const [existing, postEntry] = await Promise.all([
+    kv.get(likeKey, { consistency: "eventual" }),
+    kv.get<Post>(["posts", postId], { consistency: "eventual" }),
+  ]);
   if (!postEntry.value) return false;
 
   const post = postEntry.value;
@@ -232,7 +249,9 @@ export async function isLiked(
   userId: string,
 ): Promise<boolean> {
   const kv = await getKv();
-  const entry = await kv.get(["likes", postId, userId], { consistency: "eventual" });
+  const entry = await kv.get(["likes", postId, userId], {
+    consistency: "eventual",
+  });
   return !!entry.value;
 }
 
@@ -244,7 +263,7 @@ export async function toggleFavorite(
 ): Promise<boolean> {
   const kv = await getKv();
   const favKey: Deno.KvKey = ["favorites", userId, postId];
-  const existing = await kv.get(favKey);
+  const existing = await kv.get(favKey, { consistency: "eventual" });
 
   if (existing.value) {
     await kv.atomic()
@@ -266,7 +285,9 @@ export async function isFavorited(
   userId: string,
 ): Promise<boolean> {
   const kv = await getKv();
-  const entry = await kv.get(["favorites", userId, postId], { consistency: "eventual" });
+  const entry = await kv.get(["favorites", userId, postId], {
+    consistency: "eventual",
+  });
   return !!entry.value;
 }
 
@@ -367,16 +388,25 @@ export async function searchPosts(
   // 收集所有匹配的帖子 ID 及匹配词数
   const postScores = new Map<string, number>();
 
-  for (const word of words) {
-    const entries = kv.list<
-      { title: string; boardSlug: string; createdAt: number }
-    >(
-      { prefix: ["search_words", word] },
-      { limit: 50, consistency: "eventual" },
-    );
+  // 并行查询所有搜索词（替代串行 for...of 循环，减少总延迟）
+  const searchResults = await Promise.all(
+    words.map(async (word) => {
+      const entries = kv.list<
+        { title: string; boardSlug: string; createdAt: number }
+      >(
+        { prefix: ["search_words", word] },
+        { limit: 50, consistency: "eventual" },
+      );
+      const ids: string[] = [];
+      for await (const entry of entries) {
+        ids.push(entry.key[2] as string);
+      }
+      return ids;
+    }),
+  );
 
-    for await (const entry of entries) {
-      const postId = entry.key[2] as string;
+  for (const ids of searchResults) {
+    for (const postId of ids) {
       postScores.set(postId, (postScores.get(postId) || 0) + 1);
     }
   }
