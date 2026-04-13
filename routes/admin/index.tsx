@@ -61,7 +61,23 @@ export default define.page<typeof handler>(function AdminPage({ data }) {
                   <td><span class={`user-badge ${u.role === "admin" ? "admin" : ""}`}>{u.role === "admin" ? "管理员" : "用户"}</span></td>
                   <td>{u.banned ? <span style={{ color: "var(--danger)" }}>已禁言</span> : <span style={{ color: "var(--success)" }}>正常</span>}</td>
                   <td style={{ color: "var(--text-tertiary)" }}>{timeAgo(u.createdAt)}</td>
-                  <td>{u.role !== "admin" && (<form method="POST" action="/api/admin/ban-user" style={{ display: "inline" }}><input type="hidden" name="userId" value={u.id} /><input type="hidden" name="action" value={u.banned ? "unban" : "ban"} /><button type="submit" class={`btn btn-sm ${u.banned ? "btn-secondary" : "btn-danger"}`}>{u.banned ? "解禁" : "禁言"}</button></form>)}</td>
+                  <td>
+                    {u.role !== "admin" && (
+                      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                        <form method="POST" action="/api/admin/ban-user" style={{ display: "inline" }}>
+                          <input type="hidden" name="userId" value={u.id} />
+                          <input type="hidden" name="action" value={u.banned ? "unban" : "ban"} />
+                          <button type="submit" class={`btn btn-sm ${u.banned ? "btn-secondary" : "btn-danger"}`}>
+                            {u.banned ? "解禁" : "禁言"}
+                          </button>
+                        </form>
+                        <form method="POST" action="/api/admin/delete-user" style={{ display: "inline" }}>
+                          <input type="hidden" name="userId" value={u.id} />
+                          <button type="submit" class="btn btn-sm btn-danger">删除</button>
+                        </form>
+                      </div>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
