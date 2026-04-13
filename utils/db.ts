@@ -1,6 +1,7 @@
 // Turso (libSQL) 数据库连接与工具函数
+// 使用 node 入口以支持本地 file: URL 和远程 libsql: URL
 
-import { type Client, createClient } from "@libsql/client";
+import { type Client, createClient } from "npm:@libsql/client/node";
 
 let _db: Client | null = null;
 

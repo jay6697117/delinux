@@ -6,7 +6,7 @@
 // 2. 在 .env 或环境变量中设置 TURSO_DATABASE_URL 和 TURSO_AUTH_TOKEN
 // 3. 本地迁移不需要环境变量（自动使用 local.db）
 
-import { type Client, createClient } from "@libsql/client";
+import { type Client, createClient } from "npm:@libsql/client/node";
 
 // 打开 KV（本地文件）
 const kv = await Deno.openKv("./local.sqlite");
@@ -20,6 +20,7 @@ if (tursoUrl) {
     authToken: Deno.env.get("TURSO_AUTH_TOKEN"),
   });
 } else {
+  // 本地开发：使用 node 入口支持 file: URL
   db = createClient({ url: "file:./local.db" });
 }
 
